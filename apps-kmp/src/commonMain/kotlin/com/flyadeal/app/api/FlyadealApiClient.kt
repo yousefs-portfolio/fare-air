@@ -10,16 +10,52 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlin.math.min
+import kotlin.random.Random
+
+/**
+ * Configuration for retry behavior on transient failures.
+ * Uses exponential backoff with jitter.
+ */
+data class RetryConfig(
+    /** Maximum number of retry attempts (not counting the initial request) */
+    val maxRetries: Int = 3,
+    /** Initial delay before first retry in milliseconds */
+    val initialDelayMs: Long = 500L,
+    /** Maximum delay between retries in milliseconds */
+    val maxDelayMs: Long = 10_000L,
+    /** Multiplier for exponential backoff */
+    val backoffMultiplier: Double = 2.0,
+    /** Jitter factor (0.0-1.0) to randomize delays */
+    val jitterFactor: Double = 0.25
+) {
+    companion object {
+        /** Default retry configuration */
+        val Default = RetryConfig()
+
+        /** No retries - fail immediately */
+        val NoRetry = RetryConfig(maxRetries = 0)
+
+        /** Aggressive retry for critical operations */
+        val Aggressive = RetryConfig(
+            maxRetries = 5,
+            initialDelayMs = 300L,
+            maxDelayMs = 15_000L
+        )
+    }
+}
 
 /**
  * API client for the flyadeal backend.
- * Uses Ktor client for cross-platform HTTP requests.
+ * Uses Ktor client for cross-platform HTTP requests with automatic retry for transient failures.
  */
 class FlyadealApiClient(
     private val baseUrl: String,
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val retryConfig: RetryConfig = RetryConfig.Default
 ) {
     /**
      * Fetches the route map from the backend.
@@ -81,28 +117,157 @@ class FlyadealApiClient(
     }
 
     /**
-     * Wraps API calls with error handling.
+     * Wraps API calls with error handling and automatic retry for transient failures.
+     * Uses exponential backoff with jitter for retries.
+     *
+     * Retryable conditions:
+     * - Network connectivity issues (IOException, timeout)
+     * - Server errors (5xx status codes, except 501 Not Implemented)
+     * - Rate limiting (429 Too Many Requests)
+     *
+     * Non-retryable conditions:
+     * - Client errors (4xx status codes, except 429)
+     * - Parse/serialization errors
      */
-    private suspend inline fun <reified T> safeApiCall(block: () -> T): ApiResult<T> {
-        return try {
-            ApiResult.Success(block())
-        } catch (e: ClientRequestException) {
-            val errorBody = e.response.bodyAsText()
-            ApiResult.Error(
-                code = "HTTP_${e.response.status.value}",
-                message = errorBody.ifEmpty { e.message }
-            )
-        } catch (e: ServerResponseException) {
-            ApiResult.Error(
-                code = "SERVER_ERROR",
-                message = "Server error: ${e.response.status.value}"
-            )
-        } catch (e: Exception) {
-            ApiResult.Error(
-                code = "NETWORK_ERROR",
-                message = e.message ?: "Unknown error"
-            )
+    private suspend inline fun <reified T> safeApiCall(
+        customRetryConfig: RetryConfig? = null,
+        crossinline block: suspend () -> T
+    ): ApiResult<T> {
+        val config = customRetryConfig ?: retryConfig
+        var lastException: Exception? = null
+        var lastErrorResult: ApiResult.Error? = null
+
+        repeat(config.maxRetries + 1) { attempt ->
+            try {
+                return ApiResult.Success(block())
+            } catch (e: ClientRequestException) {
+                // Client errors (4xx) - check if retryable
+                val statusCode = e.response.status.value
+                if (isRetryableClientError(statusCode)) {
+                    lastException = e
+                    lastErrorResult = ApiResult.Error(
+                        code = "HTTP_$statusCode",
+                        message = "Rate limited. Retrying...",
+                        isRetryable = true
+                    )
+                } else {
+                    // Non-retryable client error - return immediately
+                    val errorBody = try {
+                        e.response.bodyAsText()
+                    } catch (_: Exception) {
+                        ""
+                    }
+                    return ApiResult.Error(
+                        code = "HTTP_$statusCode",
+                        message = errorBody.ifEmpty { e.message },
+                        isRetryable = false
+                    )
+                }
+            } catch (e: ServerResponseException) {
+                // Server errors (5xx) - generally retryable
+                val statusCode = e.response.status.value
+                if (isRetryableServerError(statusCode)) {
+                    lastException = e
+                    lastErrorResult = ApiResult.Error(
+                        code = "SERVER_ERROR",
+                        message = "Server error: $statusCode",
+                        isRetryable = true
+                    )
+                } else {
+                    return ApiResult.Error(
+                        code = "SERVER_ERROR_$statusCode",
+                        message = "Server error: $statusCode",
+                        isRetryable = false
+                    )
+                }
+            } catch (e: HttpRequestTimeoutException) {
+                // Timeout - retryable
+                lastException = e
+                lastErrorResult = ApiResult.Error(
+                    code = "TIMEOUT",
+                    message = "Request timed out",
+                    isRetryable = true
+                )
+            } catch (e: Exception) {
+                // Network and other errors - check if retryable
+                if (isRetryableException(e)) {
+                    lastException = e
+                    lastErrorResult = ApiResult.Error(
+                        code = "NETWORK_ERROR",
+                        message = e.message ?: "Network error",
+                        isRetryable = true
+                    )
+                } else {
+                    return ApiResult.Error(
+                        code = "ERROR",
+                        message = e.message ?: "Unknown error",
+                        isRetryable = false
+                    )
+                }
+            }
+
+            // If we have more retries, delay before next attempt
+            if (attempt < config.maxRetries) {
+                val delayMs = calculateBackoffDelay(attempt, config)
+                delay(delayMs)
+            }
         }
+
+        // All retries exhausted - return the last error
+        return lastErrorResult ?: ApiResult.Error(
+            code = "NETWORK_ERROR",
+            message = lastException?.message ?: "Request failed after ${config.maxRetries} retries",
+            isRetryable = false
+        )
+    }
+
+    /**
+     * Calculates delay for exponential backoff with jitter.
+     */
+    private fun calculateBackoffDelay(attempt: Int, config: RetryConfig): Long {
+        // Calculate base delay with exponential backoff
+        var delayMs = config.initialDelayMs
+        repeat(attempt) {
+            delayMs = (delayMs * config.backoffMultiplier).toLong()
+        }
+        delayMs = min(delayMs, config.maxDelayMs)
+
+        // Add jitter to prevent thundering herd
+        val jitter = (delayMs * config.jitterFactor * Random.nextDouble()).toLong()
+        return delayMs + jitter
+    }
+
+    /**
+     * Determines if a client error (4xx) is retryable.
+     * Only 429 (Too Many Requests) is retryable.
+     */
+    private fun isRetryableClientError(statusCode: Int): Boolean {
+        return statusCode == 429 // Too Many Requests
+    }
+
+    /**
+     * Determines if a server error (5xx) is retryable.
+     * 501 (Not Implemented) is not retryable.
+     */
+    private fun isRetryableServerError(statusCode: Int): Boolean {
+        return statusCode in 500..599 && statusCode != 501
+    }
+
+    /**
+     * Determines if an exception is retryable.
+     * Network-related exceptions are retryable.
+     */
+    private fun isRetryableException(e: Exception): Boolean {
+        val className = e::class.simpleName ?: ""
+        return className.contains("IOException", ignoreCase = true) ||
+               className.contains("Connect", ignoreCase = true) ||
+               className.contains("Socket", ignoreCase = true) ||
+               className.contains("Timeout", ignoreCase = true) ||
+               className.contains("Network", ignoreCase = true) ||
+               className.contains("UnknownHost", ignoreCase = true) ||
+               e.message?.contains("connection", ignoreCase = true) == true ||
+               e.message?.contains("timeout", ignoreCase = true) == true ||
+               e.message?.contains("network", ignoreCase = true) == true
     }
 
     companion object {
@@ -146,7 +311,11 @@ class FlyadealApiClient(
  */
 sealed class ApiResult<out T> {
     data class Success<T>(val data: T) : ApiResult<T>()
-    data class Error(val code: String, val message: String) : ApiResult<Nothing>()
+    data class Error(
+        val code: String,
+        val message: String,
+        val isRetryable: Boolean = false
+    ) : ApiResult<Nothing>()
 
     val isSuccess: Boolean get() = this is Success
     val isError: Boolean get() = this is Error
