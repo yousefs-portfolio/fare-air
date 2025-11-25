@@ -170,7 +170,7 @@ sealed class ApiResult<out T> {
     }
 }
 
-// DTO classes for API communication
+// DTO classes for API communication - matches backend response format
 
 @Serializable
 data class RouteMapDto(
@@ -206,6 +206,9 @@ data class FlightSearchResponseDto(
     val searchId: String = ""
 )
 
+/**
+ * Flight DTO matching backend SearchController.FlightDto
+ */
 @Serializable
 data class FlightDto(
     val flightNumber: String,
@@ -213,11 +216,66 @@ data class FlightDto(
     val destination: String,
     val departureTime: String,
     val arrivalTime: String,
-    val duration: String = "",
+    val durationMinutes: Int = 0,
+    val durationFormatted: String = "",
     val aircraft: String = "",
-    val fares: List<FareDto> = emptyList()
+    val fareFamilies: List<FareFamilyDto> = emptyList()
+) {
+    /** Convenience property for display */
+    val duration: String get() = durationFormatted.ifEmpty { "${durationMinutes}m" }
+
+    /** Convert fareFamilies to simpler fares for UI display */
+    val fares: List<FareDto> get() = fareFamilies.map { ff ->
+        FareDto(
+            fareFamily = ff.name,
+            basePrice = ff.priceFormatted,
+            totalPrice = ff.priceFormatted,
+            currency = ff.currency,
+            inclusions = buildInclusionsList(ff.inclusions)
+        )
+    }
+
+    private fun buildInclusionsList(inclusions: FareInclusionsDto): List<String> {
+        val list = mutableListOf<String>()
+        list.add("Carry-on: ${inclusions.carryOnBag}")
+        inclusions.checkedBag?.let { list.add("Checked bag: $it") }
+        list.add("Seat: ${inclusions.seatSelection}")
+        if (inclusions.priorityBoarding) list.add("Priority boarding")
+        if (inclusions.loungeAccess) list.add("Lounge access")
+        return list
+    }
+}
+
+/**
+ * Fare family DTO matching backend SearchController.FareFamilyDto
+ */
+@Serializable
+data class FareFamilyDto(
+    val code: String,
+    val name: String,
+    val priceMinor: Long,
+    val priceFormatted: String,
+    val currency: String,
+    val inclusions: FareInclusionsDto
 )
 
+/**
+ * Fare inclusions DTO matching backend SearchController.FareInclusionsDto
+ */
+@Serializable
+data class FareInclusionsDto(
+    val carryOnBag: String,
+    val checkedBag: String? = null,
+    val seatSelection: String,
+    val changePolicy: String,
+    val cancellationPolicy: String,
+    val priorityBoarding: Boolean,
+    val loungeAccess: Boolean
+)
+
+/**
+ * Simplified fare DTO for UI display.
+ */
 @Serializable
 data class FareDto(
     val fareFamily: String,
@@ -229,11 +287,13 @@ data class FareDto(
 
 @Serializable
 data class BookingRequestDto(
+    val searchId: String = "",
     val flightNumber: String,
     val fareFamily: String,
     val passengers: List<PassengerDto>,
+    val ancillaries: List<AncillaryDto> = emptyList(),
     val contactEmail: String,
-    val contactPhone: String,
+    val contactPhone: String = "",
     val payment: PaymentDto
 )
 
@@ -251,20 +311,31 @@ data class PassengerDto(
 )
 
 @Serializable
+data class AncillaryDto(
+    val type: String,
+    val passengerIndex: Int,
+    val priceMinor: Long = 0,
+    val currency: String = "SAR"
+)
+
+@Serializable
 data class PaymentDto(
-    val cardNumber: String,
     val cardholderName: String,
-    val amount: String,
+    val cardNumberLast4: String,
+    val totalAmountMinor: Long,
     val currency: String
 )
 
 @Serializable
 data class BookingConfirmationDto(
     val pnr: String,
+    val bookingReference: String = "",
     val status: String = "CONFIRMED",
-    val totalPrice: String = "0",
+    val totalPaidMinor: Long = 0,
+    val totalPaidFormatted: String = "0",
     val currency: String = "SAR",
-    val flightNumber: String = "",
-    val passengers: List<String> = emptyList(),
     val createdAt: String = ""
-)
+) {
+    /** Convenience property for display */
+    val totalPrice: String get() = totalPaidFormatted.ifEmpty { (totalPaidMinor / 100.0).toString() }
+}

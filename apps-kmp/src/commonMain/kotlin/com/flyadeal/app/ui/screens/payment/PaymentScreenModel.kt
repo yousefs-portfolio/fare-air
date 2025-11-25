@@ -222,9 +222,9 @@ class PaymentScreenModel(
                 contactEmail = passengers.firstOrNull()?.email ?: "",
                 contactPhone = passengers.firstOrNull()?.phone ?: "",
                 payment = PaymentDto(
-                    cardNumber = state.cardNumber.takeLast(4),
                     cardholderName = state.cardholderName,
-                    amount = state.totalPrice,
+                    cardNumberLast4 = state.cardNumber.takeLast(4),
+                    totalAmountMinor = (state.totalPrice.toDoubleOrNull() ?: 0.0).toLong() * 100,
                     currency = "SAR"
                 )
             )
