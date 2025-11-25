@@ -106,3 +106,9 @@ This is "Project Shadow" - a Kotlin Multiplatform airline booking platform for f
 - Use `@Serializable` for all data transfer objects
 - API paths defined in `ApiRoutes` object (e.g., `/v1/config/routes`, `/v1/search`, `/v1/booking`)
 - Mock data stored in `backend-quarkus/src/main/resources/mock-data/`
+
+## Active Technologies
+- Kotlin 2.0+ (K2 compiler) (001-airline-booking-platform)
+
+## Recent Changes
+- 001-airline-booking-platform: Added Kotlin 2.0+ (K2 compiler)

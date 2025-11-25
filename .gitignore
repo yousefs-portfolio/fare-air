@@ -1,0 +1,89 @@
+# Gradle
+.gradle/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Kotlin
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+*.kotlin_module
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.nfs*
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.local.properties
+local.properties
+
+# Logs
+*.log
+logs/
+
+# Quarkus
+backend-quarkus/target/
+backend-quarkus/.quarkus/
+
+# Android
+apps-kmp/src/androidMain/*.apk
+apps-kmp/src/androidMain/*.ap_
+apps-kmp/src/androidMain/*.dex
+apps-kmp/src/androidMain/*.class
+apps-kmp/src/androidMain/gen/
+apps-kmp/src/androidMain/proguard/
+apps-kmp/src/androidMain/captures/
+apps-kmp/src/androidMain/.externalNativeBuild/
+apps-kmp/src/androidMain/.cxx/
+
+# iOS
+apps-kmp/iosApp/Pods/
+apps-kmp/iosApp/*.xcworkspace
+apps-kmp/iosApp/DerivedData/
+*.xcuserdata
+*.xcscmblueprint
+*.xccheckout
+
+# Kotlin Multiplatform
+*.podspec
+.kotlin/
+kotlin-js-store/
+
+# Compose
+compose-resources/
+
+# Testing
+.coverage/
+coverage/
+*.lcov
+test-results/
