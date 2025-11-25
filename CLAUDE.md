@@ -1,0 +1,108 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+# NO-STUB / PRODUCTION-READY POLICY
+
+## 1. Core Mandate
+You are strictly forbidden from generating "stubs," "placeholders," "mock implementations," or "partial code." You must act as a Senior Engineer delivering the final pull request before deployment. Every line of code must be functional, complete, and production-ready.
+
+## 2. Prohibited Patterns
+The following patterns are **BANNED** and must never appear in your output:
+- `// TODO` or `# TODO` comments suggesting future work.
+- `// ...` or `...` inside functions or blocks.
+- `return true;`, `return null;`, or `return;` used merely to satisfy type checkers without actual logic.
+- Comments such as:
+  - "In a real implementation..."
+  - "For now, we will..."
+  - "Implementation details omitted..."
+  - "Connect to database here..."
+  - "Add error handling here..."
+- Hardcoded placeholders (e.g., `const user = { name: "Test User" }`) unless explicitly requested for a test fixture.
+
+## 3. Production Standards
+- **Complete Logic:** If a function is defined, its body must be fully implemented. If the logic is complex, write the complex logic. Do not simplify it for brevity.
+- **Error Handling:** distinct try/catch blocks, specific error types, and proper logging/propagation must be included. Do not just swallow errors or print "Error occurred."
+- **Edge Cases:** Handle nulls, empty lists, and boundary conditions immediately.
+- **Imports:** Include all necessary imports. Do not assume the user has them.
+
+## 4. Handling Missing Context
+If you lack the specific requirements to implement a feature fully (e.g., "Connect to the API" but you don't know the endpoint):
+1. **Do NOT** write a comment saying "Call API here."
+2. **DO** generate a complete, generic implementation using standard industry patterns (e.g., a full `fetch` implementation with headers, error handling, and response parsing) and add a single comment indicating where the specific URL should be swapped.
+3. OR, stop and ask the user for the specific implementation details before generating code.
+
+## 5. Verbosity
+Favor verbosity and correctness over brevity. Do not prioritize saving tokens. If a file requires 500 lines of boilerplate to be correct, generate all 500 lines.
+
+## Project Overview
+
+This is "Project Shadow" - a Kotlin Multiplatform airline booking platform for flyadeal. The architecture consists of:
+
+- **:shared-contract** - Pure Kotlin multiplatform module containing DTOs, API routes, and models (no platform-specific dependencies)
+- **:backend-quarkus** - Quarkus JVM backend serving as a BFF (Backend for Frontend)
+- **:apps-kmp** - Compose Multiplatform frontend targeting Android, iOS, and Web (Wasm)
+
+## Tech Stack Constraints
+
+**Strictly adhere to these choices:**
+
+- **Build:** Gradle multi-module with Version Catalog (`libs.versions.toml`)
+- **Language:** Kotlin 2.0+ with K2 compiler
+- **Backend:** Quarkus (RESTEasy Reactive, Jackson/Kotlinx.Serialization)
+- **Frontend:** Compose Multiplatform with Material 3
+- **Navigation:** Voyager
+- **DI:** Koin (Annotations preferred)
+- **Networking:** Ktor Client (frontend) <-> RESTEasy (backend)
+- **Dates:** ISO-8601 strings or `kotlinx.datetime` types only
+
+## Build Commands
+
+```bash
+# Build entire project
+./gradlew build
+
+# Run Quarkus backend in dev mode
+./gradlew :backend-quarkus:quarkusDev
+
+# Run Android app
+./gradlew :apps-kmp:installDebug
+
+# Run desktop (for testing)
+./gradlew :apps-kmp:run
+
+# Run web (Wasm)
+./gradlew :apps-kmp:wasmJsBrowserRun
+
+# Run tests
+./gradlew test
+
+# Run single test class
+./gradlew :module-name:test --tests "com.flyadeal.ClassName"
+```
+
+## Architecture Guidelines
+
+1. **Shared Contract is Source of Truth** - All DTOs and API routes must be defined in `:shared-contract` and used by both frontend and backend
+
+2. **Business Logic Location** - Never put business logic inside Composable UI functions; always use `ScreenModel` (Voyager's ViewModel equivalent)
+
+3. **State Pattern** - ScreenModels must handle "Loading", "Content", and "Error" states
+
+4. **Backend Layering:**
+   - Controllers -> Services -> Clients
+   - `NavitaireClient` interface with `MockNavitaireClient` and `RealNavitaireClient` implementations
+   - Toggle via `flyadeal.provider` config property
+
+5. **Caching Strategy:**
+   - Routes/Stations: 24-hour TTL
+   - Flight search results: 5-minute TTL using Caffeine
+
+6. **RTL Support** - Arabic language support with runtime direction switching is critical
+
+## Key Patterns
+
+- Use Value Classes for strict typing where possible
+- Use `@Serializable` for all data transfer objects
+- API paths defined in `ApiRoutes` object (e.g., `/v1/config/routes`, `/v1/search`, `/v1/booking`)
+- Mock data stored in `backend-quarkus/src/main/resources/mock-data/`
