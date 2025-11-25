@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import com.flyadeal.app.di.DefaultPlatformConfig
 import com.flyadeal.app.di.PlatformConfig
 import com.flyadeal.app.di.appModules
+import com.flyadeal.app.persistence.initializeLocalStorage
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -20,6 +21,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize local storage with application context
+        initializeLocalStorage(applicationContext)
 
         // Initialize Koin if not already started
         initKoin()

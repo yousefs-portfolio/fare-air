@@ -27,4 +27,6 @@ sealed interface AppScreen {
     interface Ancillaries : AppScreen
     interface Payment : AppScreen
     interface Confirmation : AppScreen
+    interface SavedBookings : AppScreen
+    interface Settings : AppScreen
 }

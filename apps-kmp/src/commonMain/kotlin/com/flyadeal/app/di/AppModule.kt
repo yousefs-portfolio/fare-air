@@ -1,6 +1,7 @@
 package com.flyadeal.app.di
 
 import com.flyadeal.app.api.FlyadealApiClient
+import com.flyadeal.app.persistence.LocalStorage
 import com.flyadeal.app.state.BookingFlowState
 import com.flyadeal.app.ui.screens.search.SearchScreenModel
 import com.flyadeal.app.ui.screens.results.ResultsScreenModel
@@ -8,6 +9,7 @@ import com.flyadeal.app.ui.screens.passengers.PassengerInfoScreenModel
 import com.flyadeal.app.ui.screens.ancillaries.AncillariesScreenModel
 import com.flyadeal.app.ui.screens.payment.PaymentScreenModel
 import com.flyadeal.app.ui.screens.confirmation.ConfirmationScreenModel
+import com.flyadeal.app.ui.screens.saved.SavedBookingsScreenModel
 import org.koin.dsl.module
 
 /**
@@ -59,6 +61,9 @@ val appModule = module {
 
     // Booking flow state - shared across screens as singleton
     single { BookingFlowState() }
+
+    // Local storage for persistence
+    single { LocalStorage() }
 }
 
 /**
@@ -106,7 +111,15 @@ val screenModelModule = module {
     // Confirmation Screen Model
     factory {
         ConfirmationScreenModel(
-            bookingFlowState = get()
+            bookingFlowState = get(),
+            localStorage = get()
+        )
+    }
+
+    // Saved Bookings Screen Model
+    factory {
+        SavedBookingsScreenModel(
+            localStorage = get()
         )
     }
 }

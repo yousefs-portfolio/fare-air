@@ -30,6 +30,9 @@ voyager = "1.1.0-beta03"
 # Caffeine
 caffeine = "3.1.8"
 
+# Multiplatform Settings
+multiplatform-settings = "1.2.0"
+
 # Testing
 junit = "5.10.3"
 rest-assured = "5.5.0"
@@ -77,6 +80,10 @@ quarkus-config-yaml = { module = "io.quarkus:quarkus-config-yaml", version.ref =
 
 # Caffeine (caching)
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+
+# Multiplatform Settings
+multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatform-settings" }
+multiplatform-settings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "multiplatform-settings" }
 
 # Testing
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }

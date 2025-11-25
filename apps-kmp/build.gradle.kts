@@ -60,6 +60,9 @@ kotlin {
                 implementation(libs.voyager.koin)
                 implementation(libs.voyager.transitions)
 
+                implementation(libs.multiplatform.settings)
+                implementation(libs.multiplatform.settings.coroutines)
+
                 implementation(project(":shared-contract"))
             }
         }

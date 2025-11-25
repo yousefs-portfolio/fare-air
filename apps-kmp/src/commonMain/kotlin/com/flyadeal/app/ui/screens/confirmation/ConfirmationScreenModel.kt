@@ -3,6 +3,7 @@ package com.flyadeal.app.ui.screens.confirmation
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.flyadeal.app.api.BookingConfirmationDto
+import com.flyadeal.app.persistence.LocalStorage
 import com.flyadeal.app.state.BookingFlowState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,10 +13,11 @@ import kotlinx.coroutines.launch
 
 /**
  * ScreenModel for the Confirmation screen.
- * Displays booking confirmation details.
+ * Displays booking confirmation details and allows saving to local storage.
  */
 class ConfirmationScreenModel(
-    private val bookingFlowState: BookingFlowState
+    private val bookingFlowState: BookingFlowState,
+    private val localStorage: LocalStorage
 ) : ScreenModel {
 
     private val _uiState = MutableStateFlow(ConfirmationUiState())
@@ -26,7 +28,7 @@ class ConfirmationScreenModel(
     }
 
     /**
-     * Loads confirmation data from booking state.
+     * Loads confirmation data from booking state and auto-saves to local storage.
      */
     private fun loadConfirmation() {
         screenModelScope.launch {
@@ -43,6 +45,14 @@ class ConfirmationScreenModel(
                     )
                 }
                 return@launch
+            }
+
+            // Auto-save booking to local storage
+            try {
+                localStorage.saveBooking(confirmation)
+                _uiState.update { it.copy(isSaved = true) }
+            } catch (e: Exception) {
+                // Continue even if save fails - user can retry manually
             }
 
             _uiState.update {
@@ -65,6 +75,21 @@ class ConfirmationScreenModel(
     }
 
     /**
+     * Manually saves the booking to local storage (for retry).
+     */
+    fun saveBooking() {
+        screenModelScope.launch {
+            val confirmation = _uiState.value.confirmation ?: return@launch
+            try {
+                localStorage.saveBooking(confirmation)
+                _uiState.update { it.copy(isSaved = true) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to save booking: ${e.message}") }
+            }
+        }
+    }
+
+    /**
      * Clears booking state and starts new booking.
      */
     fun startNewBooking(onNavigate: () -> Unit) {
@@ -80,6 +105,7 @@ data class ConfirmationUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val confirmation: BookingConfirmationDto? = null,
+    val isSaved: Boolean = false,
     val originCode: String = "",
     val originCity: String = "",
     val destinationCode: String = "",
