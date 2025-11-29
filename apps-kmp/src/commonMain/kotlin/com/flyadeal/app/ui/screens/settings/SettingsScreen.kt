@@ -212,7 +212,7 @@ private fun AboutCard() {
                 )
                 Column {
                     Text(
-                        text = "flyadeal",
+                        text = "FairAir",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -227,7 +227,7 @@ private fun AboutCard() {
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             Text(
-                text = "Book affordable flights across Saudi Arabia with flyadeal - the Kingdom's low-cost carrier.",
+                text = "Book affordable flights across Saudi Arabia with FairAir - your trusted travel partner.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

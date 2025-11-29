@@ -33,7 +33,7 @@ fun main() {
     // Start the Compose application
     CanvasBasedWindow(
         canvasElementId = "ComposeTarget",
-        title = "flyadeal"
+        title = "FairAir"
     ) {
         App()
     }

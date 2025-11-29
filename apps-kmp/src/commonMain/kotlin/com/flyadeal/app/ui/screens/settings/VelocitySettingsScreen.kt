@@ -256,7 +256,7 @@ private fun VelocityAboutSection(
 
                 // Description
                 Text(
-                    text = "Book affordable flights across Saudi Arabia with flyadeal - the Kingdom's low-cost carrier.",
+                    text = "Book affordable flights across Saudi Arabia with FairAir - your trusted travel partner.",
                     style = VelocityTheme.typography.body,
                     color = VelocityColors.TextMuted
                 )

@@ -5,30 +5,42 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * Velocity UI design system colors.
- * Deep purple background with neon lime accent for a modern, immersive experience.
+ * FairAir UI design system colors.
+ * Teal primary with coral accent on a dark slate background for a modern, trustworthy experience.
  */
 @Immutable
 object VelocityColors {
     /**
-     * Primary app background - deep purple/black (#120521)
+     * Primary brand color - teal (#0D9488)
+     * Used for buttons, headers, and primary actions
      */
-    val BackgroundDeep = Color(0xFF120521)
+    val Primary = Color(0xFF0D9488)
 
     /**
-     * Accent color for CTAs, highlights, and interactive elements - neon lime (#CCFF00)
+     * Primary app background - dark slate (#1E293B)
      */
-    val Accent = Color(0xFFCCFF00)
+    val BackgroundDeep = Color(0xFF1E293B)
 
     /**
-     * Glassmorphism card background - semi-transparent white
+     * Mid-tone background - medium slate (#334155)
+     * Used for cards and elevated surfaces
      */
-    val GlassBg = Color.White.copy(alpha = 0.1f)
+    val BackgroundMid = Color(0xFF334155)
+
+    /**
+     * Accent color for CTAs, highlights, and interactive elements - coral (#F97316)
+     */
+    val Accent = Color(0xFFF97316)
+
+    /**
+     * Glassmorphism card background - semi-transparent dark slate
+     */
+    val GlassBg = Color(0xFF1E293B).copy(alpha = 0.5f)
 
     /**
      * Glassmorphism card hover/active state
      */
-    val GlassHover = Color.White.copy(alpha = 0.15f)
+    val GlassHover = Color(0xFF334155).copy(alpha = 0.6f)
 
     /**
      * Glassmorphism card border - subtle white
@@ -41,14 +53,14 @@ object VelocityColors {
     val TextMain = Color.White
 
     /**
-     * Secondary/muted text color - 60% white
+     * Secondary/muted text color - slate gray (#94A3B8)
      */
-    val TextMuted = Color.White.copy(alpha = 0.6f)
+    val TextMuted = Color(0xFF94A3B8)
 
     /**
-     * Glow effect for launch button - accent with reduced alpha
+     * Glow effect for launch button - coral accent with reduced alpha
      */
-    val NeonGlow = Color(0xFFCCFF00).copy(alpha = 0.3f)
+    val NeonGlow = Color(0xFFF97316).copy(alpha = 0.3f)
 
     /**
      * Disabled state color
@@ -56,24 +68,29 @@ object VelocityColors {
     val Disabled = Color.White.copy(alpha = 0.3f)
 
     /**
-     * Error state color
+     * Error state color - red (#EF4444)
      */
-    val Error = Color(0xFFFF6B6B)
+    val Error = Color(0xFFEF4444)
 
     /**
-     * Success state color
+     * Success state color - green (#22C55E)
      */
-    val Success = Color(0xFF4ADE80)
+    val Success = Color(0xFF22C55E)
 
     /**
-     * Background gradient start (top)
+     * Warning state color - amber (#F59E0B)
      */
-    val GradientStart = Color(0xFF1A0A2E)
+    val Warning = Color(0xFFF59E0B)
 
     /**
-     * Background gradient end (bottom)
+     * Background gradient start (top) - darker teal (#0F766E)
      */
-    val GradientEnd = Color(0xFF120521)
+    val GradientStart = Color(0xFF0F766E)
+
+    /**
+     * Background gradient end (bottom) - dark slate (#1E293B)
+     */
+    val GradientEnd = Color(0xFF1E293B)
 }
 
 /**

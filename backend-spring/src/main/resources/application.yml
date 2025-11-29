@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: flyadeal-backend
+    name: fairair-backend
   jackson:
     serialization:
       write-dates-as-timestamps: false

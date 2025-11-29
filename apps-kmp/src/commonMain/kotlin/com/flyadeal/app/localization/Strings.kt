@@ -162,7 +162,7 @@ interface AppStrings {
  */
 object EnglishStrings : AppStrings {
     // General
-    override val appName = "flyadeal"
+    override val appName = "FairAir"
     override val loading = "Loading..."
     override val error = "Error"
     override val retry = "Retry"
@@ -319,7 +319,7 @@ object EnglishStrings : AppStrings {
  */
 object ArabicStrings : AppStrings {
     // General
-    override val appName = "فلاي أديل"
+    override val appName = "فير إير"
     override val loading = "جاري التحميل..."
     override val error = "خطأ"
     override val retry = "إعادة المحاولة"
