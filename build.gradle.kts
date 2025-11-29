@@ -6,7 +6,8 @@ plugins {
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
-    alias(libs.plugins.quarkus) apply false
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.spring.dependency.management) apply false
 }
 
 allprojects {

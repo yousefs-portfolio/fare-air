@@ -78,6 +78,8 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.ktor.client.okhttp)
                 implementation(libs.koin.android)
+                implementation("androidx.activity:activity-compose:1.8.2")
+                implementation("androidx.core:core-ktx:1.12.0")
             }
         }
 

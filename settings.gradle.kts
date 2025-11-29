@@ -20,5 +20,5 @@ dependencyResolutionManagement {
 }
 
 include(":shared-contract")
-include(":backend-quarkus")
+include(":backend-spring")
 include(":apps-kmp")

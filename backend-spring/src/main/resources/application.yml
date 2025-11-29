@@ -1,0 +1,51 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: flyadeal-backend
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+# Flyadeal Configuration
+flyadeal:
+  provider: mock
+  cache:
+    routes-ttl: 86400
+    search-ttl: 300
+  mock:
+    min-delay: 500
+    max-delay: 1500
+
+# Spring Boot Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.flyadeal: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss} %-5level [%logger{2}] (%thread) %msg%n"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+logging:
+  level:
+    root: DEBUG

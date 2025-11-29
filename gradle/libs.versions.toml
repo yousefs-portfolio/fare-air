@@ -14,8 +14,9 @@ android-minSdk = "24"
 android-targetSdk = "34"
 android-compileSdk = "34"
 
-# Quarkus
-quarkus = "3.16.3"
+# Spring Boot
+spring-boot = "3.2.0"
+spring-dependency-management = "1.1.4"
 
 # Ktor
 ktor = "3.0.1"
@@ -70,13 +71,14 @@ voyager-screenmodel = { module = "cafe.adriel.voyager:voyager-screenmodel", vers
 voyager-koin = { module = "cafe.adriel.voyager:voyager-koin", version.ref = "voyager" }
 voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyager" }
 
-# Quarkus (for backend) - Quarkus 3.x uses quarkus-rest instead of quarkus-resteasy-reactive
-quarkus-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
-quarkus-kotlin = { module = "io.quarkus:quarkus-kotlin", version.ref = "quarkus" }
-quarkus-rest = { module = "io.quarkus:quarkus-rest", version.ref = "quarkus" }
-quarkus-rest-jackson = { module = "io.quarkus:quarkus-rest-jackson", version.ref = "quarkus" }
-quarkus-arc = { module = "io.quarkus:quarkus-arc", version.ref = "quarkus" }
-quarkus-config-yaml = { module = "io.quarkus:quarkus-config-yaml", version.ref = "quarkus" }
+# Spring Boot
+spring-boot-starter-webflux = { module = "org.springframework.boot:spring-boot-starter-webflux", version.ref = "spring-boot" }
+spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "spring-boot" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.15.3" }
+
+# Kotlinx Coroutines Reactor
+kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "kotlinx-coroutines" }
 
 # Caffeine (caching)
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
@@ -88,15 +90,16 @@ multiplatform-settings-coroutines = { module = "com.russhwolf:multiplatform-sett
 # Testing
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-quarkus-junit5 = { module = "io.quarkus:quarkus-junit5", version.ref = "quarkus" }
 rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "rest-assured" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }
 android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
-quarkus = { id = "io.quarkus", version.ref = "quarkus" }
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
