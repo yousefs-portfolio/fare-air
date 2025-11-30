@@ -140,7 +140,7 @@ fun VelocityFlightCardCompact(
                     color = VelocityColors.TextMain
                 )
                 Text(
-                    text = "${flight.originCode} → ${flight.destinationCode}",
+                    text = "${flight.originCode} - ${flight.destinationCode}",
                     style = typography.labelSmall,
                     color = VelocityColors.TextMuted
                 )

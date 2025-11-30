@@ -53,13 +53,14 @@ class MainActivity : ComponentActivity() {
         /**
          * Android-specific Koin module.
          * Provides platform-specific configuration.
+         * Uses BuildConfig.IS_DEBUG which is set at build time for release/debug variants.
          */
         private val androidModule = module {
             single<PlatformConfig> {
                 DefaultPlatformConfig(
                     // Use 10.0.2.2 for Android emulator to access host localhost
                     apiBaseUrl = "http://10.0.2.2:8080",
-                    isDebug = true
+                    isDebug = BuildConfig.IS_DEBUG
                 )
             }
         }

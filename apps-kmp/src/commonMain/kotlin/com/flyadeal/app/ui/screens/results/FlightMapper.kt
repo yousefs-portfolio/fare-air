@@ -76,7 +76,7 @@ object FlightMapper {
 
     /**
      * Formats a time string to display format.
-     * Expects ISO time format or HH:mm and returns HH:mm.
+     * Expects ISO datetime format (2025-11-30T08:00:00) or HH:mm and returns HH:mm.
      */
     private fun formatTime(time: String): String {
         // If already in HH:mm format, return as is
@@ -84,10 +84,15 @@ object FlightMapper {
             return time
         }
 
-        // If in ISO format (HH:mm:ss or with timezone), extract HH:mm
+        // If in ISO datetime format, extract the time part after "T"
         return try {
-            time.substringBefore("T").ifEmpty { time }
-                .split(":")
+            val timePart = if (time.contains("T")) {
+                time.substringAfter("T")
+            } else {
+                time
+            }
+            // Take first two components (HH:mm) and ignore seconds/timezone
+            timePart.split(":")
                 .take(2)
                 .joinToString(":")
         } catch (e: Exception) {

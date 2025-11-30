@@ -19,6 +19,22 @@ flyadeal:
   mock:
     min-delay: 500
     max-delay: 1500
+  security:
+    jwt:
+      # IMPORTANT: Override this with environment variable in production!
+      # Use: FLYADEAL_SECURITY_JWT_SECRET=your-production-secret
+      secret: ${JWT_SECRET:development-only-secret-change-in-production-32chars}
+      access-token-expiry-seconds: 900
+      refresh-token-expiry-seconds: 604800
+    rate-limit:
+      enabled: true
+      general-requests-per-minute: 100
+      sensitive-requests-per-minute: 10
+    cors:
+      allowed-origins:
+        - http://localhost:8081
+        - http://localhost:3000
+        - http://127.0.0.1:8081
 
 # Spring Boot Actuator
 management:
@@ -32,11 +48,13 @@ management:
         enabled: true
       show-details: always
 
-# Logging
+# Logging - sanitized for production
 logging:
   level:
     root: INFO
-    com.flyadeal: DEBUG
+    com.flyadeal: INFO
+    # Don't log sensitive security details
+    org.springframework.security: WARN
   pattern:
     console: "%d{HH:mm:ss} %-5level [%logger{36}] - %msg%n"
 
@@ -46,6 +64,30 @@ spring:
     activate:
       on-profile: dev
 
+flyadeal:
+  security:
+    rate-limit:
+      enabled: false
+
 logging:
   level:
     root: DEBUG
+    com.flyadeal: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+flyadeal:
+  security:
+    cors:
+      allowed-origins:
+        - https://fairair.example.com
+        - https://www.fairair.example.com
+
+logging:
+  level:
+    root: WARN
+    com.flyadeal: INFO

@@ -80,9 +80,9 @@ class AncillariesScreenModel(
      */
     private fun getAvailableMealOptions(): List<MealOption> = listOf(
         MealOption(code = "NONE", name = "No meal", price = "0"),
+        MealOption(code = "MOML", name = "Muslim Meal (Halal)", price = "35"),
         MealOption(code = "CHML", name = "Chicken Meal", price = "35"),
         MealOption(code = "VGML", name = "Vegetarian Meal", price = "35"),
-        MealOption(code = "KSML", name = "Kosher Meal", price = "40"),
         MealOption(code = "BBML", name = "Baby Meal", price = "25")
     )
 

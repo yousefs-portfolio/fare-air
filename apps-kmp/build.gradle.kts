@@ -134,9 +134,25 @@ android {
     }
 
     buildTypes {
-        getByName("release") {
+        getByName("debug") {
+            // Debug builds for development
             isMinifyEnabled = false
+            buildConfigField("Boolean", "IS_DEBUG", "true")
         }
+        getByName("release") {
+            // Enable minification and shrinking for release builds (security requirement)
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            buildConfigField("Boolean", "IS_DEBUG", "false")
+        }
+    }
+    
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {

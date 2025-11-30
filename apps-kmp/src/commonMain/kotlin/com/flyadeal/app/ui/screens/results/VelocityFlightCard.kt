@@ -90,16 +90,16 @@ data class VelocityFlightCard(
         }
 
     /**
-     * Route display string (e.g., "RUH → DXB").
+     * Route display string (e.g., "RUH - DXB").
      */
     val routeDisplay: String
-        get() = "$originCode → $destinationCode"
+        get() = "$originCode - $destinationCode"
 
     /**
-     * Route display string for Arabic (reversed arrow direction).
+     * Route display string for Arabic (reversed direction).
      */
     val routeDisplayArabic: String
-        get() = "$destinationCode ← $originCode"
+        get() = "$destinationCode - $originCode"
 
     /**
      * Gets the selected fare family, if any.

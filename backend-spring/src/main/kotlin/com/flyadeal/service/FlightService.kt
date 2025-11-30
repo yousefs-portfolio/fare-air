@@ -7,7 +7,6 @@ import com.flyadeal.exception.FareNotFoundException
 import com.flyadeal.exception.FlightNotFoundException
 import com.flyadeal.exception.SearchExpiredException
 import com.flyadeal.exception.ValidationException
-import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -24,27 +23,25 @@ class FlightService(
 
     /**
      * Gets the route map with caching.
+     * Uses suspend-aware cache retrieval to avoid blocking Netty threads.
      * @return The RouteMap defining valid origin-destination pairs
      */
     suspend fun getRouteMap(): RouteMap {
         log.debug("Getting route map")
-        return cacheService.getRouteMap {
-            runBlocking {
-                navitaireClient.getRouteMap()
-            }
+        return cacheService.getRouteMapSuspend {
+            navitaireClient.getRouteMap()
         }
     }
 
     /**
      * Gets all stations with caching.
+     * Uses suspend-aware cache retrieval to avoid blocking Netty threads.
      * @return List of all available stations
      */
     suspend fun getStations(): List<Station> {
         log.debug("Getting stations")
-        return cacheService.getStations {
-            runBlocking {
-                navitaireClient.getStations()
-            }
+        return cacheService.getStationsSuspend {
+            navitaireClient.getStations()
         }
     }
 

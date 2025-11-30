@@ -18,6 +18,12 @@ android-compileSdk = "34"
 spring-boot = "3.2.0"
 spring-dependency-management = "1.1.4"
 
+# Spring Security
+jjwt = "0.12.6"
+
+# Rate Limiting
+bucket4j = "8.10.1"
+
 # Ktor
 ktor = "3.0.1"
 
@@ -74,8 +80,17 @@ voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", vers
 # Spring Boot
 spring-boot-starter-webflux = { module = "org.springframework.boot:spring-boot-starter-webflux", version.ref = "spring-boot" }
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "spring-boot" }
+spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security", version.ref = "spring-boot" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.15.3" }
+
+# JWT
+jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
+jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
+jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
+
+# Rate Limiting
+bucket4j-core = { module = "com.bucket4j:bucket4j-core", version.ref = "bucket4j" }
 
 # Kotlinx Coroutines Reactor
 kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "kotlinx-coroutines" }

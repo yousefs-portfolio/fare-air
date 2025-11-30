@@ -1,10 +1,12 @@
 package com.flyadeal.app.ui.screens.saved
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -13,7 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -22,60 +26,97 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.flyadeal.app.api.BookingConfirmationDto
 import com.flyadeal.app.navigation.AppScreen
-import com.flyadeal.app.ui.components.*
+import com.flyadeal.app.ui.theme.VelocityColors
+import com.flyadeal.app.ui.theme.VelocityTheme
 
 /**
- * Screen displaying saved bookings for offline access.
+ * Saved bookings screen with Velocity design system.
  */
 class SavedBookingsScreen : Screen, AppScreen.SavedBookings {
 
-    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val screenModel = getScreenModel<SavedBookingsScreenModel>()
         val uiState by screenModel.uiState.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
 
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Saved Bookings",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
+        VelocityTheme {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                VelocityColors.GradientStart,
+                                VelocityColors.GradientEnd
                             )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     )
-                )
-            }
-        ) { paddingValues ->
-            SavedBookingsContent(
-                uiState = uiState,
-                onBookingClick = screenModel::selectBooking,
-                onDeleteBooking = screenModel::deleteBooking,
-                onClearError = screenModel::clearError,
-                modifier = Modifier.padding(paddingValues)
-            )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                ) {
+                    // Header
+                    VelocitySavedHeader(onBack = { navigator.pop() })
 
-            // Booking detail dialog
-            uiState.selectedBooking?.let { booking ->
-                BookingDetailDialog(
-                    booking = booking,
-                    onDismiss = screenModel::clearSelectedBooking
-                )
+                    // Content
+                    SavedBookingsContent(
+                        uiState = uiState,
+                        onBookingClick = screenModel::selectBooking,
+                        onDeleteBooking = screenModel::deleteBooking,
+                        onClearError = screenModel::clearError,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                // Booking detail dialog
+                uiState.selectedBooking?.let { booking ->
+                    BookingDetailDialog(
+                        booking = booking,
+                        onDismiss = screenModel::clearSelectedBooking
+                    )
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun VelocitySavedHeader(onBack: () -> Unit) {
+    val typography = VelocityTheme.typography
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier.align(Alignment.CenterStart)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = VelocityColors.TextMain
+            )
+        }
+
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Saved Bookings",
+                style = typography.timeBig,
+                color = VelocityColors.TextMain
+            )
+            Text(
+                text = "Access offline",
+                style = typography.duration,
+                color = VelocityColors.TextMuted
+            )
         }
     }
 }
@@ -88,29 +129,31 @@ private fun SavedBookingsContent(
     onClearError: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val typography = VelocityTheme.typography
+
     when {
         uiState.isLoading -> {
-            LoadingIndicator(
-                message = "Loading saved bookings...",
-                modifier = modifier
-            )
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = VelocityColors.Accent)
+            }
         }
         uiState.isEmpty -> {
             EmptyBookingsDisplay(modifier = modifier)
         }
         else -> {
             LazyColumn(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentPadding = PaddingValues(16.dp),
+                modifier = modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
                     Text(
                         text = "${uiState.bookings.size} saved booking${if (uiState.bookings.size > 1) "s" else ""}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = typography.labelSmall,
+                        color = VelocityColors.TextMuted
                     )
                 }
 
@@ -125,10 +168,9 @@ private fun SavedBookingsContent(
                 // Error message
                 if (uiState.error != null) {
                     item {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer
-                            )
+                        Surface(
+                            color = VelocityColors.Error.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -139,15 +181,16 @@ private fun SavedBookingsContent(
                             ) {
                                 Text(
                                     text = uiState.error,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    style = typography.body,
+                                    color = VelocityColors.Error,
                                     modifier = Modifier.weight(1f)
                                 )
                                 IconButton(onClick = onClearError) {
                                     Icon(
                                         imageVector = Icons.Default.Close,
                                         contentDescription = "Dismiss",
-                                        tint = MaterialTheme.colorScheme.onErrorContainer
+                                        tint = VelocityColors.Error,
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
@@ -161,6 +204,8 @@ private fun SavedBookingsContent(
 
 @Composable
 private fun EmptyBookingsDisplay(modifier: Modifier = Modifier) {
+    val typography = VelocityTheme.typography
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -168,23 +213,31 @@ private fun EmptyBookingsDisplay(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.Star,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .clip(CircleShape)
+                .background(VelocityColors.GlassBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = null,
+                modifier = Modifier.size(40.dp),
+                tint = VelocityColors.TextMuted
+            )
+        }
+        Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = "No saved bookings",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = typography.timeBig,
+            color = VelocityColors.TextMain
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Your completed bookings will appear here for offline access",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = typography.body,
+            color = VelocityColors.TextMuted,
             textAlign = TextAlign.Center
         )
     }
@@ -196,18 +249,18 @@ private fun SavedBookingCard(
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val typography = VelocityTheme.typography
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(20.dp),
+        color = VelocityColors.GlassBg,
+        border = BorderStroke(1.dp, VelocityColors.GlassBorder.copy(alpha = 0.3f))
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -217,39 +270,41 @@ private fun SavedBookingCard(
                 Column {
                     Text(
                         text = "PNR",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = typography.labelSmall,
+                        color = VelocityColors.TextMuted
                     )
                     Text(
                         text = booking.pnr,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        style = typography.timeBig,
+                        color = VelocityColors.Accent
                     )
                 }
 
                 // Status badge
                 Surface(
                     color = when (booking.status) {
-                        "CONFIRMED" -> MaterialTheme.colorScheme.primaryContainer
-                        "PENDING" -> MaterialTheme.colorScheme.tertiaryContainer
-                        else -> MaterialTheme.colorScheme.errorContainer
+                        "CONFIRMED" -> VelocityColors.Accent.copy(alpha = 0.2f)
+                        "PENDING" -> Color(0xFFFFA500).copy(alpha = 0.2f)
+                        else -> VelocityColors.Error.copy(alpha = 0.2f)
                     },
-                    shape = RoundedCornerShape(4.dp)
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         text = booking.status,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        style = typography.labelSmall,
+                        color = when (booking.status) {
+                            "CONFIRMED" -> VelocityColors.Accent
+                            "PENDING" -> Color(0xFFFFA500)
+                            else -> VelocityColors.Error
+                        },
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            HorizontalDivider()
-
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = VelocityColors.GlassBorder.copy(alpha = 0.3f))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -260,13 +315,13 @@ private fun SavedBookingCard(
                 Column {
                     Text(
                         text = "Total Paid",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = typography.labelSmall,
+                        color = VelocityColors.TextMuted
                     )
                     Text(
                         text = "${booking.currency} ${booking.totalPrice}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
+                        style = typography.body,
+                        color = VelocityColors.TextMain
                     )
                 }
 
@@ -275,12 +330,13 @@ private fun SavedBookingCard(
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = "Booked",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = typography.labelSmall,
+                            color = VelocityColors.TextMuted
                         )
                         Text(
-                            text = booking.createdAt.take(10), // Show date portion
-                            style = MaterialTheme.typography.bodyMedium
+                            text = booking.createdAt.take(10),
+                            style = typography.body,
+                            color = VelocityColors.TextMain
                         )
                     }
                 }
@@ -289,20 +345,24 @@ private fun SavedBookingCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Delete button
-            TextButton(
-                onClick = { showDeleteConfirm = true },
-                modifier = Modifier.align(Alignment.End)
+            Row(
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .clickable { showDeleteConfirm = true }
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
+                    tint = VelocityColors.Error,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "Remove",
-                    color = MaterialTheme.colorScheme.error
+                    style = typography.labelSmall,
+                    color = VelocityColors.Error
                 )
             }
         }
@@ -312,6 +372,9 @@ private fun SavedBookingCard(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
+            containerColor = VelocityColors.GlassBg,
+            titleContentColor = VelocityColors.TextMain,
+            textContentColor = VelocityColors.TextMuted,
             title = { Text("Remove Booking?") },
             text = { Text("This will remove the booking from your saved list. You can always re-fetch it from the server using the PNR.") },
             confirmButton = {
@@ -321,12 +384,12 @@ private fun SavedBookingCard(
                         onDelete()
                     }
                 ) {
-                    Text("Remove", color = MaterialTheme.colorScheme.error)
+                    Text("Remove", color = VelocityColors.Error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
+                    Text("Cancel", color = VelocityColors.TextMuted)
                 }
             }
         )
@@ -338,26 +401,29 @@ private fun BookingDetailDialog(
     booking: BookingConfirmationDto,
     onDismiss: () -> Unit
 ) {
+    val typography = VelocityTheme.typography
+
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = VelocityColors.GlassBg,
+        titleContentColor = VelocityColors.TextMain,
+        textContentColor = VelocityColors.TextMuted,
         title = {
             Column {
                 Text(
                     text = "Booking Details",
-                    style = MaterialTheme.typography.titleLarge
+                    style = typography.timeBig
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "PNR: ${booking.pnr}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    style = typography.body,
+                    color = VelocityColors.Accent
                 )
             }
         },
         text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 DetailRow("Status", booking.status)
                 DetailRow("Total Paid", "${booking.currency} ${booking.totalPrice}")
                 if (booking.bookingReference.isNotEmpty()) {
@@ -370,7 +436,7 @@ private fun BookingDetailDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text("Close", color = VelocityColors.Accent)
             }
         }
     )
@@ -378,19 +444,21 @@ private fun BookingDetailDialog(
 
 @Composable
 private fun DetailRow(label: String, value: String) {
+    val typography = VelocityTheme.typography
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = typography.body,
+            color = VelocityColors.TextMuted
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
+            style = typography.body,
+            color = VelocityColors.TextMain
         )
     }
 }

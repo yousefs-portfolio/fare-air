@@ -1,11 +1,8 @@
 package com.flyadeal.app.ui.screens.confirmation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -24,11 +22,12 @@ import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.flyadeal.app.navigation.AppScreen
-import com.flyadeal.app.ui.components.*
 import com.flyadeal.app.ui.screens.search.SearchScreen
+import com.flyadeal.app.ui.theme.VelocityColors
+import com.flyadeal.app.ui.theme.VelocityTheme
 
 /**
- * Confirmation screen showing booking success and details.
+ * Confirmation screen with Velocity design system.
  */
 class ConfirmationScreen : Screen, AppScreen.Confirmation {
 
@@ -38,14 +37,53 @@ class ConfirmationScreen : Screen, AppScreen.Confirmation {
         val uiState by screenModel.uiState.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
 
-        ConfirmationContent(
-            uiState = uiState,
-            onNewBooking = {
-                screenModel.startNewBooking {
-                    navigator.replaceAll(SearchScreen())
+        VelocityTheme {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                VelocityColors.GradientStart,
+                                VelocityColors.GradientEnd
+                            )
+                        )
+                    )
+            ) {
+                when {
+                    uiState.isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = VelocityColors.Accent)
+                        }
+                    }
+                    uiState.error != null -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = uiState.error ?: "Error",
+                                style = VelocityTheme.typography.body,
+                                color = VelocityColors.Error
+                            )
+                        }
+                    }
+                    else -> {
+                        ConfirmationContent(
+                            uiState = uiState,
+                            onNewBooking = {
+                                screenModel.startNewBooking {
+                                    navigator.replaceAll(SearchScreen())
+                                }
+                            }
+                        )
+                    }
                 }
             }
-        )
+        }
     }
 }
 
@@ -54,107 +92,76 @@ private fun ConfirmationContent(
     uiState: ConfirmationUiState,
     onNewBooking: () -> Unit
 ) {
-    when {
-        uiState.isLoading -> {
-            LoadingIndicator(message = "Loading confirmation...")
+    val typography = VelocityTheme.typography
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.safeDrawing),
+        contentPadding = PaddingValues(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Success Header
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+            SuccessHeader()
         }
-        uiState.error != null -> {
-            ErrorDisplay(message = uiState.error)
+
+        // PNR Card
+        item {
+            PnrCard(pnr = uiState.pnr)
         }
-        else -> {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-                    .windowInsetsPadding(WindowInsets.safeDrawing),
-                contentPadding = PaddingValues(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Success Header
-                item {
-                    SuccessHeader()
-                }
 
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
+        // Flight Details Card
+        item {
+            FlightDetailsCard(
+                originCode = uiState.originCode,
+                originCity = uiState.originCity,
+                destinationCode = uiState.destinationCode,
+                destinationCity = uiState.destinationCity,
+                departureDate = uiState.departureDate,
+                departureTime = uiState.departureTime,
+                arrivalTime = uiState.arrivalTime,
+                flightNumber = uiState.flightNumber
+            )
+        }
 
-                // PNR Display
-                item {
-                    PnrCard(pnr = uiState.pnr)
-                }
+        // Passenger Card
+        item {
+            PassengerCard(
+                passengerCount = uiState.passengerCount,
+                primaryName = uiState.primaryPassengerName
+            )
+        }
 
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
+        // Payment Card
+        item {
+            PaymentCard(
+                totalPrice = uiState.totalPrice,
+                currency = uiState.currency,
+                status = uiState.bookingStatus
+            )
+        }
 
-                // Flight Summary
-                item {
-                    FlightSummaryCard(
-                        originCode = uiState.originCode,
-                        originCity = uiState.originCity,
-                        destinationCode = uiState.destinationCode,
-                        destinationCity = uiState.destinationCity,
-                        departureDate = uiState.departureDate,
-                        departureTime = uiState.departureTime,
-                        arrivalTime = uiState.arrivalTime,
-                        flightNumber = uiState.flightNumber
-                    )
-                }
+        // Actions
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            ActionButtons(onNewBooking = onNewBooking)
+        }
 
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // Passenger Info
-                item {
-                    PassengerSummaryCard(
-                        passengerCount = uiState.passengerCount,
-                        primaryName = uiState.primaryPassengerName
-                    )
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // Payment Summary
-                item {
-                    PaymentSummaryCard(
-                        totalPrice = uiState.totalPrice,
-                        currency = uiState.currency,
-                        status = uiState.bookingStatus
-                    )
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-
-                // Actions
-                item {
-                    ActionButtons(onNewBooking = onNewBooking)
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // Info Note
-                item {
-                    InfoNote()
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-            }
+        // Info Note
+        item {
+            InfoNote()
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
 private fun SuccessHeader() {
+    val typography = VelocityTheme.typography
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -162,32 +169,31 @@ private fun SuccessHeader() {
             modifier = Modifier
                 .size(80.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
+                .background(VelocityColors.Accent.copy(alpha = 0.2f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = "Success",
-                tint = MaterialTheme.colorScheme.primary,
+                tint = VelocityColors.Accent,
                 modifier = Modifier.size(48.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = "Booking Confirmed!",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            style = typography.timeBig,
+            color = VelocityColors.Accent
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = "Your flight has been successfully booked",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = typography.body,
+            color = VelocityColors.TextMuted,
             textAlign = TextAlign.Center
         )
     }
@@ -195,12 +201,13 @@ private fun SuccessHeader() {
 
 @Composable
 private fun PnrCard(pnr: String) {
-    Card(
+    val typography = VelocityTheme.typography
+
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(20.dp),
+        color = VelocityColors.Accent.copy(alpha = 0.15f),
+        border = BorderStroke(1.dp, VelocityColors.Accent.copy(alpha = 0.3f))
     ) {
         Column(
             modifier = Modifier
@@ -210,17 +217,16 @@ private fun PnrCard(pnr: String) {
         ) {
             Text(
                 text = "Booking Reference (PNR)",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                style = typography.labelSmall,
+                color = VelocityColors.Accent
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = pnr,
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                style = typography.timeBig,
+                color = VelocityColors.Accent,
                 letterSpacing = androidx.compose.ui.unit.TextUnit(4f, androidx.compose.ui.unit.TextUnitType.Sp)
             )
 
@@ -228,8 +234,8 @@ private fun PnrCard(pnr: String) {
 
             Text(
                 text = "Save this reference for managing your booking",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                style = typography.labelSmall,
+                color = VelocityColors.Accent.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center
             )
         }
@@ -237,7 +243,7 @@ private fun PnrCard(pnr: String) {
 }
 
 @Composable
-private fun FlightSummaryCard(
+private fun FlightDetailsCard(
     originCode: String,
     originCity: String,
     destinationCode: String,
@@ -247,153 +253,148 @@ private fun FlightSummaryCard(
     arrivalTime: String,
     flightNumber: String
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+    val typography = VelocityTheme.typography
+
+    VelocityGlassCard {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 16.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.Default.DateRange,
+                contentDescription = null,
+                tint = VelocityColors.Accent,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Flight Details",
+                style = typography.body,
+                color = VelocityColors.TextMuted
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Departure
+            Column(horizontalAlignment = Alignment.Start) {
                 Text(
-                    text = "Flight Details",
-                    style = MaterialTheme.typography.titleMedium
+                    text = departureTime,
+                    style = typography.timeBig,
+                    color = VelocityColors.TextMain
+                )
+                Text(
+                    text = originCode,
+                    style = typography.body,
+                    color = VelocityColors.Accent
+                )
+                Text(
+                    text = originCity,
+                    style = typography.labelSmall,
+                    color = VelocityColors.TextMuted
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Flight indicator
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.weight(1f)
             ) {
-                // Departure
-                Column(horizontalAlignment = Alignment.Start) {
-                    Text(
-                        text = departureTime,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = originCode,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = originCity,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                // Flight indicator
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = flightNumber,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Send,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Text(
-                        text = "Direct",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                // Arrival
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = arrivalTime,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = destinationCode,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = destinationCity,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    text = flightNumber,
+                    style = typography.labelSmall,
+                    color = VelocityColors.Accent
+                )
+                Text(
+                    text = "-",
+                    style = typography.body,
+                    color = VelocityColors.TextMuted
+                )
+                Text(
+                    text = "Direct",
+                    style = typography.labelSmall,
+                    color = VelocityColors.TextMuted
+                )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = departureDate,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+            // Arrival
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = arrivalTime,
+                    style = typography.timeBig,
+                    color = VelocityColors.TextMain
+                )
+                Text(
+                    text = destinationCode,
+                    style = typography.body,
+                    color = VelocityColors.Accent
+                )
+                Text(
+                    text = destinationCity,
+                    style = typography.labelSmall,
+                    color = VelocityColors.TextMuted
+                )
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalDivider(color = VelocityColors.GlassBorder.copy(alpha = 0.3f))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.DateRange,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = VelocityColors.TextMuted
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = departureDate,
+                style = typography.body,
+                color = VelocityColors.TextMain
+            )
         }
     }
 }
 
 @Composable
-private fun PassengerSummaryCard(
+private fun PassengerCard(
     passengerCount: Int,
     primaryName: String
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(12.dp))
+    val typography = VelocityTheme.typography
+
+    VelocityGlassCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(VelocityColors.Accent.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = VelocityColors.Accent,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
                     text = "Passengers",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = typography.labelSmall,
+                    color = VelocityColors.TextMuted
                 )
                 Text(
                     text = "$primaryName${if (passengerCount > 1) " + ${passengerCount - 1} more" else ""}",
-                    style = MaterialTheme.typography.bodyLarge
+                    style = typography.body,
+                    color = VelocityColors.TextMain
                 )
             }
         }
@@ -401,58 +402,66 @@ private fun PassengerSummaryCard(
 }
 
 @Composable
-private fun PaymentSummaryCard(
+private fun PaymentCard(
     totalPrice: String,
     currency: String,
     status: String
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+    val typography = VelocityTheme.typography
+
+    VelocityGlassCard {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(VelocityColors.Accent.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
-                        imageVector = Icons.Default.Star,
+                        imageVector = Icons.Default.Check,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Total Paid",
-                        style = MaterialTheme.typography.titleMedium
+                        tint = VelocityColors.Accent,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
-                Text(
-                    text = "$currency $totalPrice",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = "Total Paid",
+                        style = typography.labelSmall,
+                        color = VelocityColors.TextMuted
+                    )
+                    Text(
+                        text = "$currency $totalPrice",
+                        style = typography.timeBig,
+                        color = VelocityColors.Accent
+                    )
+                }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Surface(
                 color = when (status) {
-                    "CONFIRMED" -> MaterialTheme.colorScheme.primaryContainer
-                    "PENDING" -> MaterialTheme.colorScheme.tertiaryContainer
-                    else -> MaterialTheme.colorScheme.errorContainer
+                    "CONFIRMED" -> VelocityColors.Accent.copy(alpha = 0.2f)
+                    "PENDING" -> Color(0xFFFFA500).copy(alpha = 0.2f)
+                    else -> VelocityColors.Error.copy(alpha = 0.2f)
                 },
-                shape = RoundedCornerShape(4.dp)
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
                     text = status,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    style = typography.labelSmall,
+                    color = when (status) {
+                        "CONFIRMED" -> VelocityColors.Accent
+                        "PENDING" -> Color(0xFFFFA500)
+                        else -> VelocityColors.Error
+                    },
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
         }
@@ -461,46 +470,84 @@ private fun PaymentSummaryCard(
 
 @Composable
 private fun ActionButtons(onNewBooking: () -> Unit) {
+    val typography = VelocityTheme.typography
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        PrimaryButton(
-            text = "Book Another Flight",
-            onClick = onNewBooking
-        )
+        Surface(
+            onClick = onNewBooking,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(28.dp),
+            color = VelocityColors.Accent
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = "Book Another Flight",
+                    style = typography.button,
+                    color = VelocityColors.BackgroundDeep
+                )
+            }
+        }
 
-        SecondaryButton(
-            text = "View E-Ticket",
-            onClick = { /* Would open e-ticket */ }
-        )
+        Surface(
+            onClick = { /* Would open e-ticket */ },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(28.dp),
+            color = Color.Transparent,
+            border = BorderStroke(1.dp, VelocityColors.GlassBorder)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = "View E-Ticket",
+                    style = typography.button,
+                    color = VelocityColors.TextMain
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun InfoNote() {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.Top
-        ) {
+    val typography = VelocityTheme.typography
+
+    VelocityGlassCard {
+        Row(verticalAlignment = Alignment.Top) {
             Icon(
                 imageVector = Icons.Default.Info,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = VelocityColors.Accent,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "A confirmation email with your e-ticket has been sent to your registered email address. Please check in online 24 hours before departure.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = typography.labelSmall,
+                color = VelocityColors.TextMuted
             )
+        }
+    }
+}
+
+@Composable
+private fun VelocityGlassCard(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = VelocityColors.GlassBg,
+        border = BorderStroke(1.dp, VelocityColors.GlassBorder.copy(alpha = 0.3f))
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            content()
         }
     }
 }

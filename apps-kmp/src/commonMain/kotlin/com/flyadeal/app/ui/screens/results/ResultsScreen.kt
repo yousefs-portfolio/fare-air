@@ -46,7 +46,7 @@ class ResultsScreen : Screen, AppScreen.Results {
                     title = {
                         Column {
                             Text(
-                                text = "${uiState.originCode} → ${uiState.destinationCode}",
+                                text = "${uiState.originCode} - ${uiState.destinationCode}",
                                 style = MaterialTheme.typography.titleMedium
                             )
                             Text(

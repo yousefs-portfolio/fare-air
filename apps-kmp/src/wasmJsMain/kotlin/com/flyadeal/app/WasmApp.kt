@@ -1,11 +1,16 @@
 package com.flyadeal.app
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -15,6 +20,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -295,29 +303,37 @@ private fun WasmPassengerScreenContainer(
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
         ) {
-            // Header
-            Row(
+            // Header with glassmorphic style
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(16.dp)
             ) {
-                IconButton(onClick = onBack) {
+                // Back button
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = VelocityColors.TextMain
                     )
                 }
-                Column(modifier = Modifier.weight(1f)) {
+
+                // Title centered
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        text = "Passenger Information",
+                        text = "Passengers",
                         style = VelocityTheme.typography.timeBig,
                         color = VelocityColors.TextMain
                     )
                     if (state.passengers.isNotEmpty()) {
                         Text(
-                            text = "Passenger ${state.currentIndex + 1} of ${state.passengers.size}",
+                            text = "${state.currentIndex + 1} of ${state.passengers.size}",
                             style = VelocityTheme.typography.duration,
                             color = VelocityColors.TextMuted
                         )
@@ -325,192 +341,213 @@ private fun WasmPassengerScreenContainer(
                 }
             }
 
-            // Progress bar
-            LinearProgressIndicator(
-                progress = { state.progress },
-                modifier = Modifier.fillMaxWidth(),
-                color = VelocityColors.Accent,
-                trackColor = VelocityColors.GlassBorder
-            )
+            // Progress indicator - dots style
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                state.passengers.forEachIndexed { index, _ ->
+                    Box(
+                        modifier = Modifier
+                            .size(if (index == state.currentIndex) 12.dp else 8.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (index <= state.currentIndex) VelocityColors.Accent
+                                else VelocityColors.GlassBorder
+                            )
+                    )
+                    if (index < state.passengers.size - 1) {
+                        Box(
+                            modifier = Modifier
+                                .width(24.dp)
+                                .height(2.dp)
+                                .background(
+                                    if (index < state.currentIndex) VelocityColors.Accent
+                                    else VelocityColors.GlassBorder
+                                )
+                        )
+                    }
+                }
+            }
 
             if (currentPassenger != null) {
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item { Spacer(modifier = Modifier.height(8.dp)) }
 
-                    // Passenger type indicator
+                    // Passenger type badge
                     item {
-                        Surface(
-                            color = VelocityColors.GlassBg,
-                            shape = RoundedCornerShape(12.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            Surface(
+                                color = VelocityColors.Accent.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(20.dp)
                             ) {
-                                Icon(
-                                    imageVector = when (currentPassenger.type) {
-                                        "ADULT" -> Icons.Default.Person
-                                        "CHILD" -> Icons.Default.Face
-                                        else -> Icons.Default.Favorite
-                                    },
-                                    contentDescription = null,
-                                    tint = VelocityColors.Accent
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = currentPassenger.label,
-                                    style = VelocityTheme.typography.body,
-                                    color = VelocityColors.TextMain
-                                )
-                            }
-                        }
-                    }
-
-                    // Title dropdown
-                    item {
-                        WasmDropdownField(
-                            value = currentPassenger.title,
-                            label = "Title *",
-                            options = when (currentPassenger.type) {
-                                "ADULT" -> listOf("Mr", "Mrs", "Ms", "Dr")
-                                "CHILD" -> listOf("Master", "Miss")
-                                else -> listOf("Infant")
-                            },
-                            onSelect = { viewModel.updatePassengerField(PassengerFormField.TITLE, it) }
-                        )
-                    }
-
-                    // Name fields
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            WasmTextField(
-                                value = currentPassenger.firstName,
-                                onValueChange = { viewModel.updatePassengerField(PassengerFormField.FIRST_NAME, it) },
-                                label = "First Name *",
-                                modifier = Modifier.weight(1f)
-                            )
-                            WasmTextField(
-                                value = currentPassenger.lastName,
-                                onValueChange = { viewModel.updatePassengerField(PassengerFormField.LAST_NAME, it) },
-                                label = "Last Name *",
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-
-                    // Date of birth
-                    item {
-                        WasmTextField(
-                            value = currentPassenger.dateOfBirth,
-                            onValueChange = { viewModel.updatePassengerField(PassengerFormField.DATE_OF_BIRTH, it) },
-                            label = "Date of Birth * (YYYY-MM-DD)",
-                            placeholder = "1990-01-15"
-                        )
-                    }
-
-                    // Nationality
-                    item {
-                        WasmTextField(
-                            value = currentPassenger.nationality,
-                            onValueChange = { viewModel.updatePassengerField(PassengerFormField.NATIONALITY, it) },
-                            label = "Nationality (ISO Code)",
-                            placeholder = "SA"
-                        )
-                    }
-
-                    // Document section
-                    item {
-                        Text(
-                            text = "Travel Document",
-                            style = VelocityTheme.typography.body,
-                            color = VelocityColors.TextMuted,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
-
-                    // Document type
-                    item {
-                        WasmDropdownField(
-                            value = when (currentPassenger.documentType) {
-                                "PASSPORT" -> "Passport"
-                                "NATIONAL_ID" -> "National ID"
-                                "IQAMA" -> "Iqama"
-                                else -> currentPassenger.documentType
-                            },
-                            label = "Document Type",
-                            options = listOf("Passport", "National ID", "Iqama"),
-                            onSelect = { selected ->
-                                val code = when (selected) {
-                                    "Passport" -> "PASSPORT"
-                                    "National ID" -> "NATIONAL_ID"
-                                    "Iqama" -> "IQAMA"
-                                    else -> selected
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = when (currentPassenger.type) {
+                                            "ADULT" -> Icons.Default.Person
+                                            "CHILD" -> Icons.Default.Face
+                                            else -> Icons.Default.Favorite
+                                        },
+                                        contentDescription = null,
+                                        tint = VelocityColors.Accent,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Text(
+                                        text = currentPassenger.label,
+                                        style = VelocityTheme.typography.button,
+                                        color = VelocityColors.Accent
+                                    )
                                 }
-                                viewModel.updatePassengerField(PassengerFormField.DOCUMENT_TYPE, code)
                             }
-                        )
-                    }
-
-                    // Document number and expiry
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            WasmTextField(
-                                value = currentPassenger.documentNumber,
-                                onValueChange = { viewModel.updatePassengerField(PassengerFormField.DOCUMENT_NUMBER, it) },
-                                label = "Document Number",
-                                modifier = Modifier.weight(1f)
-                            )
-                            WasmTextField(
-                                value = currentPassenger.documentExpiry,
-                                onValueChange = { viewModel.updatePassengerField(PassengerFormField.DOCUMENT_EXPIRY, it) },
-                                label = "Expiry Date",
-                                placeholder = "YYYY-MM-DD",
-                                modifier = Modifier.weight(1f)
-                            )
                         }
                     }
 
-                    // Contact info for primary adult
+                    // Personal Details Card
+                    item {
+                        VelocityFormCard(title = "Personal Details") {
+                            // Title selector
+                            VelocityChipSelector(
+                                label = "Title",
+                                options = when (currentPassenger.type) {
+                                    "ADULT" -> listOf("Mr", "Mrs", "Ms", "Dr")
+                                    "CHILD" -> listOf("Master", "Miss")
+                                    else -> listOf("Infant")
+                                },
+                                selectedOption = currentPassenger.title,
+                                onSelect = { viewModel.updatePassengerField(PassengerFormField.TITLE, it) }
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Name fields
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                VelocityGlassTextField(
+                                    value = currentPassenger.firstName,
+                                    onValueChange = { viewModel.updatePassengerField(PassengerFormField.FIRST_NAME, it) },
+                                    label = "First Name",
+                                    modifier = Modifier.weight(1f)
+                                )
+                                VelocityGlassTextField(
+                                    value = currentPassenger.lastName,
+                                    onValueChange = { viewModel.updatePassengerField(PassengerFormField.LAST_NAME, it) },
+                                    label = "Last Name",
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Date of birth and nationality
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                VelocityGlassTextField(
+                                    value = currentPassenger.dateOfBirth,
+                                    onValueChange = { viewModel.updatePassengerField(PassengerFormField.DATE_OF_BIRTH, it) },
+                                    label = "Date of Birth",
+                                    placeholder = "YYYY-MM-DD",
+                                    modifier = Modifier.weight(1f)
+                                )
+                                VelocityGlassTextField(
+                                    value = currentPassenger.nationality,
+                                    onValueChange = { viewModel.updatePassengerField(PassengerFormField.NATIONALITY, it) },
+                                    label = "Nationality",
+                                    placeholder = "SA",
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+
+                    // Travel Document Card
+                    item {
+                        VelocityFormCard(title = "Travel Document") {
+                            // Document type chips
+                            VelocityChipSelector(
+                                label = "Document Type",
+                                options = listOf("Passport", "National ID", "Iqama"),
+                                selectedOption = when (currentPassenger.documentType) {
+                                    "PASSPORT" -> "Passport"
+                                    "NATIONAL_ID" -> "National ID"
+                                    "IQAMA" -> "Iqama"
+                                    else -> "Passport"
+                                },
+                                onSelect = { selected ->
+                                    val code = when (selected) {
+                                        "Passport" -> "PASSPORT"
+                                        "National ID" -> "NATIONAL_ID"
+                                        "Iqama" -> "IQAMA"
+                                        else -> "PASSPORT"
+                                    }
+                                    viewModel.updatePassengerField(PassengerFormField.DOCUMENT_TYPE, code)
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Document number and expiry
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                VelocityGlassTextField(
+                                    value = currentPassenger.documentNumber,
+                                    onValueChange = { viewModel.updatePassengerField(PassengerFormField.DOCUMENT_NUMBER, it) },
+                                    label = "Document Number",
+                                    modifier = Modifier.weight(1f)
+                                )
+                                VelocityGlassTextField(
+                                    value = currentPassenger.documentExpiry,
+                                    onValueChange = { viewModel.updatePassengerField(PassengerFormField.DOCUMENT_EXPIRY, it) },
+                                    label = "Expiry Date",
+                                    placeholder = "YYYY-MM-DD",
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+
+                    // Contact Info Card (only for primary adult)
                     if (currentPassenger.id == "adult_0") {
                         item {
-                            Text(
-                                text = "Contact Information",
-                                style = VelocityTheme.typography.body,
-                                color = VelocityColors.TextMuted,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                        }
+                            VelocityFormCard(title = "Contact Information") {
+                                VelocityGlassTextField(
+                                    value = currentPassenger.email,
+                                    onValueChange = { viewModel.updatePassengerField(PassengerFormField.EMAIL, it) },
+                                    label = "Email Address",
+                                    placeholder = "your@email.com",
+                                    keyboardType = KeyboardType.Email
+                                )
 
-                        item {
-                            WasmTextField(
-                                value = currentPassenger.email,
-                                onValueChange = { viewModel.updatePassengerField(PassengerFormField.EMAIL, it) },
-                                label = "Email Address *",
-                                keyboardType = KeyboardType.Email
-                            )
-                        }
+                                Spacer(modifier = Modifier.height(12.dp))
 
-                        item {
-                            WasmTextField(
-                                value = currentPassenger.phone,
-                                onValueChange = { viewModel.updatePassengerField(PassengerFormField.PHONE, it) },
-                                label = "Phone Number *",
-                                placeholder = "+966 5XX XXX XXXX",
-                                keyboardType = KeyboardType.Phone
-                            )
+                                VelocityGlassTextField(
+                                    value = currentPassenger.phone,
+                                    onValueChange = { viewModel.updatePassengerField(PassengerFormField.PHONE, it) },
+                                    label = "Phone Number",
+                                    placeholder = "+966 5XX XXX XXXX",
+                                    keyboardType = KeyboardType.Phone
+                                )
+                            }
                         }
                     }
 
@@ -518,19 +555,19 @@ private fun WasmPassengerScreenContainer(
                     if (state.error != null) {
                         item {
                             Surface(
-                                color = VelocityColors.Error.copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(8.dp)
+                                color = VelocityColors.Error.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(12.dp),
+                                        .padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
                                         text = state.error ?: "",
-                                        style = VelocityTheme.typography.duration,
+                                        style = VelocityTheme.typography.body,
                                         color = VelocityColors.Error,
                                         modifier = Modifier.weight(1f)
                                     )
@@ -538,7 +575,8 @@ private fun WasmPassengerScreenContainer(
                                         Icon(
                                             imageVector = Icons.Default.Close,
                                             contentDescription = "Dismiss",
-                                            tint = VelocityColors.Error
+                                            tint = VelocityColors.Error,
+                                            modifier = Modifier.size(20.dp)
                                         )
                                     }
                                 }
@@ -546,31 +584,50 @@ private fun WasmPassengerScreenContainer(
                         }
                     }
 
-                    item { Spacer(modifier = Modifier.height(16.dp)) }
+                    item { Spacer(modifier = Modifier.height(24.dp)) }
                 }
 
-                // Bottom navigation
-                Surface(
-                    color = VelocityColors.GlassBg,
-                    modifier = Modifier.fillMaxWidth()
+                // Bottom navigation with glassmorphic buttons
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    VelocityColors.BackgroundDeep.copy(alpha = 0.9f)
+                                )
+                            )
+                        )
+                        .padding(20.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         if (!state.isFirstPassenger) {
-                            OutlinedButton(
+                            // Previous button - glass style
+                            Surface(
                                 onClick = { viewModel.previousPassenger() },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = VelocityColors.Accent
-                                )
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(28.dp),
+                                color = VelocityColors.GlassBg,
+                                border = BorderStroke(1.dp, VelocityColors.GlassBorder)
                             ) {
-                                Text("Previous")
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = "Previous",
+                                        style = VelocityTheme.typography.button,
+                                        color = VelocityColors.TextMain
+                                    )
+                                }
                             }
                         }
 
-                        Button(
+                        // Continue/Next button - accent style
+                        Surface(
                             onClick = {
                                 if (state.isLastPassenger) {
                                     if (viewModel.validatePassengers()) {
@@ -580,15 +637,145 @@ private fun WasmPassengerScreenContainer(
                                     viewModel.nextPassenger()
                                 }
                             },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = VelocityColors.Accent,
-                                contentColor = VelocityColors.BackgroundDeep
-                            )
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp),
+                            shape = RoundedCornerShape(28.dp),
+                            color = VelocityColors.Accent
                         ) {
-                            Text(if (state.isLastPassenger) "Continue" else "Next Passenger")
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = if (state.isLastPassenger) "Continue to Payment" else "Next Passenger",
+                                    style = VelocityTheme.typography.button,
+                                    color = VelocityColors.BackgroundDeep
+                                )
+                            }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Glassmorphic form card container.
+ */
+@Composable
+private fun VelocityFormCard(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = VelocityColors.GlassBg,
+        border = BorderStroke(1.dp, VelocityColors.GlassBorder.copy(alpha = 0.3f))
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = title,
+                style = VelocityTheme.typography.body,
+                color = VelocityColors.TextMuted
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            content()
+        }
+    }
+}
+
+/**
+ * Glassmorphic text field matching Velocity design.
+ */
+@Composable
+private fun VelocityGlassTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    placeholder: String = "",
+    keyboardType: KeyboardType = KeyboardType.Text
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = VelocityTheme.typography.labelSmall,
+            color = VelocityColors.TextMuted,
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(VelocityColors.BackgroundDeep.copy(alpha = 0.5f))
+                .border(1.dp, VelocityColors.GlassBorder.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                .padding(horizontal = 14.dp),
+            textStyle = VelocityTheme.typography.body.copy(color = VelocityColors.TextMain),
+            cursorBrush = SolidColor(VelocityColors.Accent),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            singleLine = true,
+            decorationBox = { innerTextField ->
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    if (value.isEmpty() && placeholder.isNotEmpty()) {
+                        Text(
+                            text = placeholder,
+                            style = VelocityTheme.typography.body,
+                            color = VelocityColors.TextMuted.copy(alpha = 0.5f)
+                        )
+                    }
+                    innerTextField()
+                }
+            }
+        )
+    }
+}
+
+/**
+ * Chip selector for options like Title, Document Type.
+ */
+@Composable
+private fun VelocityChipSelector(
+    label: String,
+    options: List<String>,
+    selectedOption: String,
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = VelocityTheme.typography.labelSmall,
+            color = VelocityColors.TextMuted,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.horizontalScroll(rememberScrollState())
+        ) {
+            options.forEach { option ->
+                val isSelected = option == selectedOption
+                Surface(
+                    onClick = { onSelect(option) },
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (isSelected) VelocityColors.Accent else Color.Transparent,
+                    border = BorderStroke(
+                        1.dp,
+                        if (isSelected) VelocityColors.Accent else VelocityColors.GlassBorder
+                    )
+                ) {
+                    Text(
+                        text = option,
+                        style = VelocityTheme.typography.button,
+                        color = if (isSelected) VelocityColors.BackgroundDeep else VelocityColors.TextMuted,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
                 }
             }
         }
@@ -756,7 +943,7 @@ private fun WasmPaymentScreenContainer(
                                 value = state.cardNumber,
                                 onValueChange = { viewModel.updatePaymentField(PaymentFormField.CARD_NUMBER, it) },
                                 label = "Card Number *",
-                                placeholder = "4111 1111 1111 1111",
+                                placeholder = "•••• •••• •••• ••••",
                                 keyboardType = KeyboardType.Number
                             )
 
@@ -819,7 +1006,7 @@ private fun WasmPaymentScreenContainer(
                     }
                 }
 
-                // Test card hint
+                // Secure payment notice
                 item {
                     Surface(
                         color = VelocityColors.Primary.copy(alpha = 0.1f),
@@ -839,7 +1026,7 @@ private fun WasmPaymentScreenContainer(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Test Mode: Use card number 4111111111111111 with any future expiry date and any 3-digit CVV.",
+                                text = "Your payment information is encrypted and secure. We never store your full card details.",
                                 style = VelocityTheme.typography.labelSmall,
                                 color = VelocityColors.TextMuted
                             )

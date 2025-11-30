@@ -45,10 +45,10 @@ fun ResultsHeader(
     ) {
         // Route and date
         Column {
-            // Route: RUH → DXB
+            // Route: RUH - DMM
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = originCode,
@@ -56,8 +56,8 @@ fun ResultsHeader(
                     color = VelocityColors.TextMain
                 )
                 Text(
-                    text = "→",
-                    style = typography.body,
+                    text = "-",
+                    style = typography.timeBig,
                     color = VelocityColors.TextMuted
                 )
                 Text(
@@ -122,7 +122,7 @@ fun ResultsHeaderCompact(
     ) {
         // Compact route display
         Text(
-            text = "$originCode → $destinationCode",
+            text = "$originCode - $destinationCode",
             style = typography.body,
             color = VelocityColors.TextMain
         )

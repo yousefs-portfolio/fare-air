@@ -26,7 +26,18 @@ data class VelocitySearchState(
     /**
      * Number of adult passengers (1-9).
      */
-    val passengerCount: Int = 1,
+    val adultsCount: Int = 1,
+
+    /**
+     * Number of child passengers (0-8). Children: 2-11 years.
+     */
+    val childrenCount: Int = 0,
+
+    /**
+     * Number of infant passengers (0-4). Infants: under 2 years.
+     * Cannot exceed number of adults (1 infant per adult lap).
+     */
+    val infantsCount: Int = 0,
 
     /**
      * List of available origin airports.
@@ -95,16 +106,46 @@ data class VelocitySearchState(
         } ?: ""
 
     /**
-     * Formatted passenger label (e.g., "1 Adult" or "2 Adults").
+     * Total passenger count for display purposes.
+     */
+    val totalPassengerCount: Int
+        get() = adultsCount + childrenCount + infantsCount
+
+    /**
+     * Formatted passenger label (e.g., "1 Adult" or "2 Adults, 1 Child").
      */
     val passengerLabel: String
-        get() = if (passengerCount == 1) "1 Adult" else "$passengerCount Adults"
+        get() {
+            val parts = mutableListOf<String>()
+            if (adultsCount > 0) {
+                parts.add(if (adultsCount == 1) "1 Adult" else "$adultsCount Adults")
+            }
+            if (childrenCount > 0) {
+                parts.add(if (childrenCount == 1) "1 Child" else "$childrenCount Children")
+            }
+            if (infantsCount > 0) {
+                parts.add(if (infantsCount == 1) "1 Infant" else "$infantsCount Infants")
+            }
+            return parts.joinToString(", ").ifEmpty { "1 Adult" }
+        }
 
     /**
      * Arabic formatted passenger label.
      */
     val passengerLabelArabic: String
-        get() = if (passengerCount == 1) "1 بالغ" else "$passengerCount بالغين"
+        get() {
+            val parts = mutableListOf<String>()
+            if (adultsCount > 0) {
+                parts.add(if (adultsCount == 1) "1 بالغ" else "$adultsCount بالغين")
+            }
+            if (childrenCount > 0) {
+                parts.add(if (childrenCount == 1) "1 طفل" else "$childrenCount أطفال")
+            }
+            if (infantsCount > 0) {
+                parts.add(if (infantsCount == 1) "1 رضيع" else "$infantsCount رضع")
+            }
+            return parts.joinToString("، ").ifEmpty { "1 بالغ" }
+        }
 
     /**
      * Formatted date for Arabic display.

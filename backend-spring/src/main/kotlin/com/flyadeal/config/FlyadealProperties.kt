@@ -23,7 +23,12 @@ data class FlyadealProperties(
     /**
      * Mock provider simulation settings
      */
-    val mock: MockProperties = MockProperties()
+    val mock: MockProperties = MockProperties(),
+
+    /**
+     * External API timeout settings
+     */
+    val timeout: TimeoutProperties = TimeoutProperties()
 )
 
 /**
@@ -54,4 +59,29 @@ data class MockProperties(
      * Maximum delay in milliseconds for mock responses
      */
     val maxDelay: Long = 1500
+)
+
+/**
+ * Timeout configuration for external API calls
+ */
+data class TimeoutProperties(
+    /**
+     * Connection timeout in milliseconds (default: 5 seconds)
+     */
+    val connectMs: Long = 5000,
+
+    /**
+     * Read timeout in milliseconds (default: 30 seconds)
+     */
+    val readMs: Long = 30000,
+
+    /**
+     * Write timeout in milliseconds (default: 10 seconds)
+     */
+    val writeMs: Long = 10000,
+
+    /**
+     * Overall request timeout in milliseconds (default: 60 seconds)
+     */
+    val requestMs: Long = 60000
 )

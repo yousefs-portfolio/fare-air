@@ -8,6 +8,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 /**
  * ScreenModel for the Passenger Info screen.
@@ -89,14 +93,14 @@ class PassengerInfoScreenModel(
                 if (passenger.id == passengerId) {
                     when (field) {
                         PassengerField.TITLE -> passenger.copy(title = value)
-                        PassengerField.FIRST_NAME -> passenger.copy(firstName = value)
-                        PassengerField.LAST_NAME -> passenger.copy(lastName = value)
-                        PassengerField.DATE_OF_BIRTH -> passenger.copy(dateOfBirth = value)
-                        PassengerField.NATIONALITY -> passenger.copy(nationality = value)
+                        PassengerField.FIRST_NAME -> passenger.copy(firstName = value.uppercase())
+                        PassengerField.LAST_NAME -> passenger.copy(lastName = value.uppercase())
+                        PassengerField.DATE_OF_BIRTH -> passenger.copy(dateOfBirth = formatDateInput(value))
+                        PassengerField.NATIONALITY -> passenger.copy(nationality = value.uppercase())
                         PassengerField.DOCUMENT_TYPE -> passenger.copy(documentType = value)
-                        PassengerField.DOCUMENT_NUMBER -> passenger.copy(documentNumber = value)
-                        PassengerField.DOCUMENT_EXPIRY -> passenger.copy(documentExpiry = value)
-                        PassengerField.EMAIL -> passenger.copy(email = value)
+                        PassengerField.DOCUMENT_NUMBER -> passenger.copy(documentNumber = value.uppercase())
+                        PassengerField.DOCUMENT_EXPIRY -> passenger.copy(documentExpiry = formatDateInput(value))
+                        PassengerField.EMAIL -> passenger.copy(email = value.lowercase())
                         PassengerField.PHONE -> passenger.copy(phone = value)
                     }
                 } else {
@@ -104,6 +108,28 @@ class PassengerInfoScreenModel(
                 }
             }
             state.copy(passengers = updatedPassengers, error = null)
+        }
+    }
+
+    /**
+     * Formats date input with automatic dash insertion.
+     * Input: raw digits like "19860429"
+     * Output: formatted "1986-04-29"
+     */
+    private fun formatDateInput(input: String): String {
+        // Remove any existing dashes and non-digits
+        val digits = input.filter { it.isDigit() }
+
+        // Limit to 8 digits (YYYYMMDD)
+        val limited = digits.take(8)
+
+        return buildString {
+            limited.forEachIndexed { index, char ->
+                append(char)
+                // Add dash after year (position 3) and month (position 5)
+                if (index == 3 && limited.length > 4) append('-')
+                if (index == 5 && limited.length > 6) append('-')
+            }
         }
     }
 
@@ -202,6 +228,7 @@ class PassengerInfoScreenModel(
      */
     private fun validatePassenger(passenger: PassengerFormData): List<String> {
         val errors = mutableListOf<String>()
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
         if (passenger.title.isBlank()) {
             errors.add("Title is required")
@@ -214,6 +241,29 @@ class PassengerInfoScreenModel(
         }
         if (passenger.dateOfBirth.isBlank()) {
             errors.add("Date of birth is required")
+        } else {
+            val dobValidation = validateDateOfBirth(passenger.dateOfBirth, passenger.type, today)
+            if (dobValidation != null) {
+                errors.add(dobValidation)
+            }
+        }
+
+        // Validate document number format
+        if (passenger.documentNumber.isNotBlank()) {
+            val docValidation = validateDocumentNumber(passenger.documentNumber, passenger.documentType)
+            if (docValidation != null) {
+                errors.add(docValidation)
+            }
+
+            // Validate expiry date if document number is provided
+            if (passenger.documentExpiry.isBlank()) {
+                errors.add("Document expiry date is required")
+            } else {
+                val expiryValidation = validateExpiryDate(passenger.documentExpiry, today)
+                if (expiryValidation != null) {
+                    errors.add(expiryValidation)
+                }
+            }
         }
 
         // Only validate contact info for first adult passenger
@@ -229,6 +279,195 @@ class PassengerInfoScreenModel(
         }
 
         return errors
+    }
+
+    /**
+     * Validates date of birth based on passenger type.
+     * Returns error message or null if valid.
+     */
+    private fun validateDateOfBirth(dateStr: String, type: PassengerType, today: LocalDate): String? {
+        val date = parseDate(dateStr) ?: return "Invalid date format (use YYYY-MM-DD)"
+
+        // Must be in the past
+        if (date >= today) {
+            return "Date of birth must be in the past"
+        }
+
+        // Calculate age
+        val age = calculateAge(date, today)
+
+        // Validate age based on passenger type
+        return when (type) {
+            PassengerType.ADULT -> {
+                if (age < 12) "Adult must be 12 years or older"
+                else if (age > 120) "Invalid date of birth"
+                else null
+            }
+            PassengerType.CHILD -> {
+                if (age < 2) "Child must be at least 2 years old"
+                else if (age >= 12) "Child must be under 12 years old"
+                else null
+            }
+            PassengerType.INFANT -> {
+                if (age >= 2) "Infant must be under 2 years old"
+                else null
+            }
+        }
+    }
+
+    /**
+     * Validates document expiry date.
+     * Must be at least 6 months in the future for most destinations.
+     */
+    private fun validateExpiryDate(dateStr: String, today: LocalDate): String? {
+        val date = parseDate(dateStr) ?: return "Invalid date format (use YYYY-MM-DD)"
+
+        // Must be in the future
+        if (date <= today) {
+            return "Document has expired"
+        }
+
+        // Should be at least 6 months in the future (common travel requirement)
+        val sixMonthsFromNow = LocalDate(
+            year = if (today.monthNumber > 6) today.year + 1 else today.year,
+            monthNumber = ((today.monthNumber + 5) % 12) + 1,
+            dayOfMonth = minOf(today.dayOfMonth, 28) // Safe day to avoid month boundary issues
+        )
+
+        if (date < sixMonthsFromNow) {
+            return "Document should be valid for at least 6 months"
+        }
+
+        return null
+    }
+
+    /**
+     * Validates document number based on document type.
+     * Returns error message or null if valid.
+     */
+    private fun validateDocumentNumber(docNumber: String, docType: String): String? {
+        val cleanNumber = docNumber.trim().uppercase()
+
+        return when (docType) {
+            "PASSPORT" -> validatePassportNumber(cleanNumber)
+            "NATIONAL_ID" -> validateSaudiNationalId(cleanNumber)
+            "IQAMA" -> validateIqamaNumber(cleanNumber)
+            else -> null
+        }
+    }
+
+    /**
+     * Validates passport number format.
+     * Most passports: 6-9 alphanumeric characters.
+     */
+    private fun validatePassportNumber(number: String): String? {
+        if (number.length < 6) {
+            return "Passport number too short (min 6 characters)"
+        }
+        if (number.length > 12) {
+            return "Passport number too long (max 12 characters)"
+        }
+        if (!number.all { it.isLetterOrDigit() }) {
+            return "Passport number should only contain letters and numbers"
+        }
+        return null
+    }
+
+    /**
+     * Validates Saudi National ID (Huwiyya) format.
+     * Saudi National ID: 10 digits starting with 1.
+     */
+    private fun validateSaudiNationalId(number: String): String? {
+        if (number.length != 10) {
+            return "Saudi National ID must be 10 digits"
+        }
+        if (!number.all { it.isDigit() }) {
+            return "Saudi National ID must contain only numbers"
+        }
+        if (!number.startsWith("1")) {
+            return "Saudi National ID must start with 1"
+        }
+        // Luhn algorithm check for Saudi ID
+        if (!isValidSaudiIdChecksum(number)) {
+            return "Invalid Saudi National ID number"
+        }
+        return null
+    }
+
+    /**
+     * Validates Iqama (Resident ID) format.
+     * Iqama: 10 digits starting with 2.
+     */
+    private fun validateIqamaNumber(number: String): String? {
+        if (number.length != 10) {
+            return "Iqama must be 10 digits"
+        }
+        if (!number.all { it.isDigit() }) {
+            return "Iqama must contain only numbers"
+        }
+        if (!number.startsWith("2")) {
+            return "Iqama must start with 2"
+        }
+        // Luhn algorithm check for Iqama
+        if (!isValidSaudiIdChecksum(number)) {
+            return "Invalid Iqama number"
+        }
+        return null
+    }
+
+    /**
+     * Validates Saudi ID/Iqama checksum using Luhn algorithm variant.
+     */
+    private fun isValidSaudiIdChecksum(number: String): Boolean {
+        if (number.length != 10) return false
+
+        var sum = 0
+        for (i in number.indices) {
+            var digit = number[i].digitToInt()
+            if (i % 2 == 0) {
+                digit *= 2
+                if (digit > 9) {
+                    digit = (digit / 10) + (digit % 10)
+                }
+            }
+            sum += digit
+        }
+        return sum % 10 == 0
+    }
+
+    /**
+     * Parses a date string in YYYY-MM-DD format.
+     */
+    private fun parseDate(dateStr: String): LocalDate? {
+        return try {
+            val parts = dateStr.split("-")
+            if (parts.size != 3) return null
+
+            val year = parts[0].toIntOrNull() ?: return null
+            val month = parts[1].toIntOrNull() ?: return null
+            val day = parts[2].toIntOrNull() ?: return null
+
+            // Basic range validation
+            if (year < 1900 || year > 2100) return null
+            if (month < 1 || month > 12) return null
+            if (day < 1 || day > 31) return null
+
+            LocalDate(year, month, day)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Calculates age in years between two dates.
+     */
+    private fun calculateAge(birthDate: LocalDate, today: LocalDate): Int {
+        var age = today.year - birthDate.year
+        if (today.monthNumber < birthDate.monthNumber ||
+            (today.monthNumber == birthDate.monthNumber && today.dayOfMonth < birthDate.dayOfMonth)) {
+            age--
+        }
+        return age
     }
 
     /**

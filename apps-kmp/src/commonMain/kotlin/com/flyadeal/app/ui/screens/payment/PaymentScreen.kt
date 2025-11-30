@@ -1,9 +1,13 @@
 package com.flyadeal.app.ui.screens.payment
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -12,103 +16,132 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.flyadeal.app.navigation.AppScreen
-import com.flyadeal.app.ui.components.*
 import com.flyadeal.app.ui.screens.confirmation.ConfirmationScreen
+import com.flyadeal.app.ui.theme.VelocityColors
+import com.flyadeal.app.ui.theme.VelocityTheme
 
 /**
- * Payment screen for entering card details and completing booking.
+ * Payment screen with Velocity design system.
  */
 class PaymentScreen : Screen, AppScreen.Payment {
 
-    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val screenModel = getScreenModel<PaymentScreenModel>()
         val uiState by screenModel.uiState.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
 
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Payment",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
+        VelocityTheme {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                VelocityColors.GradientStart,
+                                VelocityColors.GradientEnd
                             )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     )
-                )
-            },
-            bottomBar = {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shadowElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Total to pay",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = "SAR ${uiState.totalPrice}",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
+                    // Header
+                    VelocityPaymentHeader(onBack = { navigator.pop() })
 
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        PrimaryButton(
-                            text = if (uiState.isProcessing) "Processing..." else "Pay Now",
-                            onClick = {
-                                screenModel.processPayment {
-                                    navigator.replaceAll(ConfirmationScreen())
+                    // Content
+                    Box(modifier = Modifier.weight(1f)) {
+                        when {
+                            uiState.isLoading -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = VelocityColors.Accent)
                                 }
-                            },
-                            enabled = uiState.isFormValid && !uiState.isProcessing,
-                            loading = uiState.isProcessing
-                        )
+                            }
+                            else -> {
+                                PaymentContent(
+                                    uiState = uiState,
+                                    onCardNumberChange = screenModel::updateCardNumber,
+                                    onCardholderNameChange = screenModel::updateCardholderName,
+                                    onExpiryDateChange = screenModel::updateExpiryDate,
+                                    onCvvChange = screenModel::updateCvv,
+                                    formatCardNumber = screenModel::formatCardNumber,
+                                    formatExpiryDate = screenModel::formatExpiryDate,
+                                    detectCardType = screenModel::detectCardType,
+                                    onClearError = screenModel::clearError
+                                )
+                            }
+                        }
                     }
+
+                    // Bottom bar
+                    VelocityPaymentBottomBar(
+                        totalPrice = uiState.totalPrice,
+                        isProcessing = uiState.isProcessing,
+                        isFormValid = uiState.isFormValid,
+                        onPayNow = {
+                            screenModel.processPayment {
+                                navigator.replaceAll(ConfirmationScreen())
+                            }
+                        }
+                    )
                 }
             }
-        ) { paddingValues ->
-            PaymentContent(
-                uiState = uiState,
-                onCardNumberChange = screenModel::updateCardNumber,
-                onCardholderNameChange = screenModel::updateCardholderName,
-                onExpiryDateChange = screenModel::updateExpiryDate,
-                onCvvChange = screenModel::updateCvv,
-                formatCardNumber = screenModel::formatCardNumber,
-                formatExpiryDate = screenModel::formatExpiryDate,
-                detectCardType = screenModel::detectCardType,
-                onClearError = screenModel::clearError,
-                modifier = Modifier.padding(paddingValues)
+        }
+    }
+}
+
+@Composable
+private fun VelocityPaymentHeader(onBack: () -> Unit) {
+    val typography = VelocityTheme.typography
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier.align(Alignment.CenterStart)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = VelocityColors.TextMain
+            )
+        }
+
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Payment",
+                style = typography.timeBig,
+                color = VelocityColors.TextMain
+            )
+            Text(
+                text = "Secure checkout",
+                style = typography.duration,
+                color = VelocityColors.TextMuted
             )
         }
     }
@@ -124,306 +157,411 @@ private fun PaymentContent(
     formatCardNumber: (String) -> String,
     formatExpiryDate: (String) -> String,
     detectCardType: (String) -> CardType,
-    onClearError: () -> Unit,
-    modifier: Modifier = Modifier
+    onClearError: () -> Unit
 ) {
-    when {
-        uiState.isLoading -> {
-            LoadingIndicator(
-                message = "Loading payment...",
-                modifier = modifier
-            )
-        }
-        else -> {
-            LazyColumn(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Order Summary
-                item {
-                    OrderSummaryCard(
-                        flightPrice = uiState.flightPrice,
-                        ancillariesPrice = uiState.ancillariesPrice,
-                        totalPrice = uiState.totalPrice,
-                        passengerCount = uiState.passengerCount
-                    )
-                }
+    val typography = VelocityTheme.typography
 
-                // Payment Methods Header
-                item {
-                    SectionHeader(title = "Payment Method")
-                }
-
-                // Card Icons
-                item {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        PaymentMethodBadge(type = CardType.VISA, isActive = detectCardType(uiState.cardNumber) == CardType.VISA)
-                        PaymentMethodBadge(type = CardType.MASTERCARD, isActive = detectCardType(uiState.cardNumber) == CardType.MASTERCARD)
-                        PaymentMethodBadge(type = CardType.AMEX, isActive = detectCardType(uiState.cardNumber) == CardType.AMEX)
-                    }
-                }
-
-                // Card Number
-                item {
-                    OutlinedTextField(
-                        value = formatCardNumber(uiState.cardNumber),
-                        onValueChange = { value ->
-                            onCardNumberChange(value.filter { it.isDigit() })
-                        },
-                        label = { Text("Card Number") },
-                        placeholder = { Text("1234 5678 9012 3456") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = null
-                            )
-                        },
-                        isError = uiState.cardNumberError != null,
-                        supportingText = uiState.cardNumberError?.let { { Text(it) } },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                // Cardholder Name
-                item {
-                    OutlinedTextField(
-                        value = uiState.cardholderName,
-                        onValueChange = onCardholderNameChange,
-                        label = { Text("Cardholder Name") },
-                        placeholder = { Text("John Doe") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null
-                            )
-                        },
-                        isError = uiState.cardholderNameError != null,
-                        supportingText = uiState.cardholderNameError?.let { { Text(it) } },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                // Expiry and CVV
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = formatExpiryDate(uiState.expiryDate),
-                            onValueChange = { value ->
-                                onExpiryDateChange(value.filter { it.isDigit() })
-                            },
-                            label = { Text("Expiry (MM/YY)") },
-                            placeholder = { Text("12/25") },
-                            isError = uiState.expiryDateError != null,
-                            supportingText = uiState.expiryDateError?.let { { Text(it) } },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        OutlinedTextField(
-                            value = uiState.cvv,
-                            onValueChange = onCvvChange,
-                            label = { Text("CVV") },
-                            placeholder = { Text("123") },
-                            isError = uiState.cvvError != null,
-                            supportingText = uiState.cvvError?.let { { Text(it) } },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            visualTransformation = PasswordVisualTransformation(),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                // Security Notice
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Secure Payment",
-                                    style = MaterialTheme.typography.labelLarge
-                                )
-                                Text(
-                                    text = "Your payment information is encrypted and secure",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Error message
-                if (uiState.error != null) {
-                    item {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = uiState.error,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                IconButton(onClick = onClearError) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Dismiss",
-                                        tint = MaterialTheme.colorScheme.onErrorContainer
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(100.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun OrderSummaryCard(
-    flightPrice: String,
-    ancillariesPrice: String,
-    totalPrice: String,
-    passengerCount: Int
-) {
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "Order Summary",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+        // Order Summary Card
+        item {
+            VelocityGlassCard {
                 Text(
-                    text = "Flight ($passengerCount passenger${if (passengerCount > 1) "s" else ""})",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = "Order Summary",
+                    style = typography.body,
+                    color = VelocityColors.TextMuted,
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
-                Text(
-                    text = "SAR $flightPrice",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
 
-            if (ancillariesPrice != "0") {
-                Spacer(modifier = Modifier.height(4.dp))
+                SummaryRow("Flight (${uiState.passengerCount} pax)", "SAR ${uiState.flightPrice}")
+
+                if (uiState.ancillariesPrice != "0") {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SummaryRow("Extras", "SAR ${uiState.ancillariesPrice}")
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = VelocityColors.GlassBorder.copy(alpha = 0.3f))
+                Spacer(modifier = Modifier.height(12.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Extras",
-                        style = MaterialTheme.typography.bodyMedium
+                        text = "Total",
+                        style = typography.body,
+                        color = VelocityColors.TextMain
                     )
                     Text(
-                        text = "SAR $ancillariesPrice",
-                        style = MaterialTheme.typography.bodyMedium
+                        text = "SAR ${uiState.totalPrice}",
+                        style = typography.timeBig,
+                        color = VelocityColors.Accent
                     )
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(8.dp))
-
+        // Payment Method Section
+        item {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 8.dp)
             ) {
-                Text(
-                    text = "Total",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "SAR $totalPrice",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(VelocityColors.Accent.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = VelocityColors.Accent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "Payment Method",
+                        style = typography.body,
+                        color = VelocityColors.TextMain
+                    )
+                    Text(
+                        text = "256-bit SSL encrypted",
+                        style = typography.labelSmall,
+                        color = VelocityColors.TextMuted
+                    )
+                }
             }
+        }
+
+        // Card Type Badges
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                CardTypeBadge("VISA", detectCardType(uiState.cardNumber) == CardType.VISA)
+                CardTypeBadge("MC", detectCardType(uiState.cardNumber) == CardType.MASTERCARD)
+                CardTypeBadge("AMEX", detectCardType(uiState.cardNumber) == CardType.AMEX)
+            }
+        }
+
+        // Card Form
+        item {
+            VelocityGlassCard {
+                // Card Number
+                VelocityPaymentField(
+                    value = formatCardNumber(uiState.cardNumber),
+                    onValueChange = { onCardNumberChange(it.filter { c -> c.isDigit() }) },
+                    label = "Card Number",
+                    placeholder = "1234 5678 9012 3456",
+                    keyboardType = KeyboardType.Number,
+                    error = uiState.cardNumberError,
+                    leadingIcon = Icons.Default.Lock
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Cardholder Name
+                VelocityPaymentField(
+                    value = uiState.cardholderName,
+                    onValueChange = onCardholderNameChange,
+                    label = "Cardholder Name",
+                    placeholder = "JOHN DOE",
+                    error = uiState.cardholderNameError,
+                    leadingIcon = Icons.Default.Person
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Expiry and CVV Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        VelocityPaymentField(
+                            value = formatExpiryDate(uiState.expiryDate),
+                            onValueChange = { onExpiryDateChange(it.filter { c -> c.isDigit() }) },
+                            label = "Expiry",
+                            placeholder = "MM/YY",
+                            keyboardType = KeyboardType.Number,
+                            error = uiState.expiryDateError
+                        )
+                    }
+                    Box(modifier = Modifier.weight(1f)) {
+                        VelocityPaymentField(
+                            value = uiState.cvv,
+                            onValueChange = onCvvChange,
+                            label = "CVV",
+                            placeholder = "123",
+                            keyboardType = KeyboardType.Number,
+                            isPassword = true,
+                            error = uiState.cvvError
+                        )
+                    }
+                }
+            }
+        }
+
+        // Security Notice
+        item {
+            VelocityGlassCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = VelocityColors.Accent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Secure Payment",
+                            style = typography.button,
+                            color = VelocityColors.TextMain
+                        )
+                        Text(
+                            text = "Your payment information is encrypted and secure",
+                            style = typography.labelSmall,
+                            color = VelocityColors.TextMuted
+                        )
+                    }
+                }
+            }
+        }
+
+        // Error message
+        if (uiState.error != null) {
+            item {
+                Surface(
+                    color = VelocityColors.Error.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = uiState.error,
+                            style = typography.body,
+                            color = VelocityColors.Error,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = onClearError) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Dismiss",
+                                tint = VelocityColors.Error,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(80.dp)) }
+    }
+}
+
+@Composable
+private fun SummaryRow(label: String, value: String) {
+    val typography = VelocityTheme.typography
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, style = typography.labelSmall, color = VelocityColors.TextMuted)
+        Text(text = value, style = typography.labelSmall, color = VelocityColors.TextMuted)
+    }
+}
+
+@Composable
+private fun CardTypeBadge(label: String, isActive: Boolean) {
+    val typography = VelocityTheme.typography
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = if (isActive) VelocityColors.Accent else Color.Transparent,
+        border = BorderStroke(1.dp, if (isActive) VelocityColors.Accent else VelocityColors.GlassBorder)
+    ) {
+        Text(
+            text = label,
+            style = typography.labelSmall,
+            color = if (isActive) VelocityColors.BackgroundDeep else VelocityColors.TextMuted,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+        )
+    }
+}
+
+@Composable
+private fun VelocityGlassCard(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = VelocityColors.GlassBg,
+        border = BorderStroke(1.dp, VelocityColors.GlassBorder.copy(alpha = 0.3f))
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            content()
         }
     }
 }
 
 @Composable
-private fun PaymentMethodBadge(
-    type: CardType,
-    isActive: Boolean
+private fun VelocityPaymentField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    isPassword: Boolean = false,
+    error: String? = null,
+    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector? = null
 ) {
-    val label = when (type) {
-        CardType.VISA -> "VISA"
-        CardType.MASTERCARD -> "MC"
-        CardType.AMEX -> "AMEX"
-        CardType.UNKNOWN -> "Card"
-    }
+    val typography = VelocityTheme.typography
 
-    Surface(
-        shape = RoundedCornerShape(4.dp),
-        color = if (isActive)
-            MaterialTheme.colorScheme.primaryContainer
-        else
-            MaterialTheme.colorScheme.surfaceVariant,
-        modifier = Modifier.padding(4.dp)
-    ) {
+    Column {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-            color = if (isActive)
-                MaterialTheme.colorScheme.onPrimaryContainer
-            else
-                MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            style = typography.labelSmall,
+            color = if (error != null) VelocityColors.Error else VelocityColors.TextMuted,
+            modifier = Modifier.padding(bottom = 6.dp)
         )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(VelocityColors.BackgroundDeep.copy(alpha = 0.5f))
+                .border(
+                    1.dp,
+                    if (error != null) VelocityColors.Error else VelocityColors.GlassBorder.copy(alpha = 0.5f),
+                    RoundedCornerShape(12.dp)
+                )
+                .padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (leadingIcon != null) {
+                Icon(
+                    imageVector = leadingIcon,
+                    contentDescription = null,
+                    tint = VelocityColors.TextMuted,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.weight(1f),
+                textStyle = typography.body.copy(color = VelocityColors.TextMain),
+                cursorBrush = SolidColor(VelocityColors.Accent),
+                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                singleLine = true,
+                visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (value.isEmpty()) {
+                            Text(
+                                text = placeholder,
+                                style = typography.body,
+                                color = VelocityColors.TextMuted.copy(alpha = 0.5f)
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            )
+        }
+        if (error != null) {
+            Text(
+                text = error,
+                style = typography.labelSmall,
+                color = VelocityColors.Error,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun VelocityPaymentBottomBar(
+    totalPrice: String,
+    isProcessing: Boolean,
+    isFormValid: Boolean,
+    onPayNow: () -> Unit
+) {
+    val typography = VelocityTheme.typography
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        VelocityColors.BackgroundDeep.copy(alpha = 0.95f)
+                    )
+                )
+            )
+            .padding(20.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Total to pay",
+                    style = typography.body,
+                    color = VelocityColors.TextMain
+                )
+                Text(
+                    text = "SAR $totalPrice",
+                    style = typography.timeBig,
+                    color = VelocityColors.Accent
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Surface(
+                onClick = onPayNow,
+                enabled = isFormValid && !isProcessing,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(28.dp),
+                color = if (isFormValid && !isProcessing) VelocityColors.Accent else VelocityColors.GlassBorder
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    if (isProcessing) {
+                        CircularProgressIndicator(
+                            color = VelocityColors.BackgroundDeep,
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Pay Now",
+                            style = typography.button,
+                            color = if (isFormValid) VelocityColors.BackgroundDeep else VelocityColors.TextMuted
+                        )
+                    }
+                }
+            }
+        }
     }
 }

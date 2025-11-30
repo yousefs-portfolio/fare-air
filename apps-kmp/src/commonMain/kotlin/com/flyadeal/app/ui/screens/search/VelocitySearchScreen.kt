@@ -49,7 +49,7 @@ fun VelocitySearchScreen(
     onOriginSelect: (StationDto) -> Unit,
     onDestinationSelect: (StationDto) -> Unit,
     onDateSelect: (LocalDate) -> Unit,
-    onPassengerSelect: (Int) -> Unit,
+    onPassengerSelect: (PassengerCounts) -> Unit,
     onFieldActivate: (SearchField?) -> Unit,
     onSearch: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -186,10 +186,12 @@ fun VelocitySearchScreen(
         PassengerSelectionBottomSheet(
             isVisible = state.activeField == SearchField.PASSENGERS,
             title = strings.passengers,
-            currentCount = state.passengerCount,
+            currentAdults = state.adultsCount,
+            currentChildren = state.childrenCount,
+            currentInfants = state.infantsCount,
             strings = strings,
-            onSelect = { count ->
-                onPassengerSelect(count)
+            onSelect = { counts ->
+                onPassengerSelect(counts)
                 onFieldActivate(null)
             },
             onDismiss = { onFieldActivate(null) }

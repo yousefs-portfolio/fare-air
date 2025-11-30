@@ -10,6 +10,7 @@ dependencies {
     // Spring Boot WebFlux
     implementation(libs.spring.boot.starter.webflux)
     implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.security)
 
     // Kotlin
     implementation(libs.kotlin.stdlib)
@@ -24,6 +25,14 @@ dependencies {
 
     // Caffeine (caching)
     implementation(libs.caffeine)
+
+    // JWT
+    implementation(libs.jjwt.api)
+    runtimeOnly(libs.jjwt.impl)
+    runtimeOnly(libs.jjwt.jackson)
+
+    // Rate Limiting
+    implementation(libs.bucket4j.core)
 
     // Shared Contract
     implementation(project(":shared-contract"))

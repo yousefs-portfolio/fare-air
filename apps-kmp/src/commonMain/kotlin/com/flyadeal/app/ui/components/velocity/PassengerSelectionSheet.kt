@@ -15,27 +15,62 @@ import com.flyadeal.app.ui.theme.VelocityColors
 import com.flyadeal.app.ui.theme.VelocityTheme
 
 /**
+ * Data class for passenger counts.
+ */
+data class PassengerCounts(
+    val adults: Int = 1,
+    val children: Int = 0,
+    val infants: Int = 0
+) {
+    val total: Int get() = adults + children + infants
+}
+
+/**
  * Passenger count selection sheet.
  *
- * Allows selection of 1-9 adult passengers.
+ * Allows selection of:
+ * - Adults: 1-9 passengers (12+ years)
+ * - Children: 0-8 passengers (2-11 years)
+ * - Infants: 0-4 passengers (under 2 years, max = adults count)
+ *
  * Uses increment/decrement controls with visual feedback.
  *
  * @param title The title to display at the top
- * @param currentCount The currently selected passenger count
+ * @param currentAdults The currently selected adult count
+ * @param currentChildren The currently selected children count
+ * @param currentInfants The currently selected infant count
  * @param strings Localized strings for labels
- * @param onSelect Callback when a count is selected
+ * @param onSelect Callback when counts are confirmed
  * @param onDismiss Callback when the sheet is dismissed
  */
 @Composable
 fun PassengerSelectionSheet(
     title: String,
-    currentCount: Int,
+    currentAdults: Int,
+    currentChildren: Int,
+    currentInfants: Int,
     strings: AppStrings,
-    onSelect: (Int) -> Unit,
+    onSelect: (PassengerCounts) -> Unit,
     onDismiss: () -> Unit
 ) {
     val typography = VelocityTheme.typography
-    var tempCount by remember(currentCount) { mutableStateOf(currentCount) }
+    var adultsCount by remember(currentAdults) { mutableStateOf(currentAdults) }
+    var childrenCount by remember(currentChildren) { mutableStateOf(currentChildren) }
+    var infantsCount by remember(currentInfants) { mutableStateOf(currentInfants) }
+
+    // Infants cannot exceed adults count
+    val maxInfants = adultsCount.coerceAtMost(4)
+
+    // Adjust infants if adults decreased below current infants
+    LaunchedEffect(adultsCount) {
+        if (infantsCount > maxInfants) {
+            infantsCount = maxInfants
+        }
+    }
+
+    // Total passengers (excluding infants as they sit on laps)
+    val totalSeatedPassengers = adultsCount + childrenCount
+    val maxTotalSeated = 9
 
     Surface(
         modifier = Modifier
@@ -67,25 +102,69 @@ fun PassengerSelectionSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Passenger counter
+            // Adults counter
             PassengerCounter(
                 label = strings.adults,
                 description = "12+ years",
-                count = tempCount,
+                count = adultsCount,
                 minValue = 1,
-                maxValue = 9,
-                onIncrement = { tempCount = (tempCount + 1).coerceAtMost(9) },
-                onDecrement = { tempCount = (tempCount - 1).coerceAtLeast(1) }
+                maxValue = (maxTotalSeated - childrenCount).coerceAtLeast(1),
+                onIncrement = {
+                    if (totalSeatedPassengers < maxTotalSeated) {
+                        adultsCount = (adultsCount + 1).coerceAtMost(9)
+                    }
+                },
+                onDecrement = { adultsCount = (adultsCount - 1).coerceAtLeast(1) }
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Children counter
+            PassengerCounter(
+                label = strings.children,
+                description = "2-11 years",
+                count = childrenCount,
+                minValue = 0,
+                maxValue = (maxTotalSeated - adultsCount).coerceAtLeast(0),
+                onIncrement = {
+                    if (totalSeatedPassengers < maxTotalSeated) {
+                        childrenCount = (childrenCount + 1).coerceAtMost(8)
+                    }
+                },
+                onDecrement = { childrenCount = (childrenCount - 1).coerceAtLeast(0) }
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Infants counter
+            PassengerCounter(
+                label = strings.infants,
+                description = "Under 2 years (on lap)",
+                count = infantsCount,
+                minValue = 0,
+                maxValue = maxInfants,
+                onIncrement = { infantsCount = (infantsCount + 1).coerceAtMost(maxInfants) },
+                onDecrement = { infantsCount = (infantsCount - 1).coerceAtLeast(0) }
+            )
+
+            // Info text about infant limit
+            if (adultsCount > 0) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Max ${adultsCount} infant${if (adultsCount > 1) "s" else ""} (1 per adult)",
+                    style = typography.duration,
+                    color = VelocityColors.TextMuted
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Confirm button
             Button(
                 onClick = {
-                    onSelect(tempCount)
+                    onSelect(PassengerCounts(adultsCount, childrenCount, infantsCount))
                     onDismiss()
                 },
                 modifier = Modifier
@@ -206,9 +285,11 @@ private fun CounterButton(
 fun PassengerSelectionBottomSheet(
     isVisible: Boolean,
     title: String,
-    currentCount: Int,
+    currentAdults: Int,
+    currentChildren: Int,
+    currentInfants: Int,
     strings: AppStrings,
-    onSelect: (Int) -> Unit,
+    onSelect: (PassengerCounts) -> Unit,
     onDismiss: () -> Unit
 ) {
     if (isVisible) {
@@ -228,7 +309,9 @@ fun PassengerSelectionBottomSheet(
         ) {
             PassengerSelectionSheet(
                 title = title,
-                currentCount = currentCount,
+                currentAdults = currentAdults,
+                currentChildren = currentChildren,
+                currentInfants = currentInfants,
                 strings = strings,
                 onSelect = onSelect,
                 onDismiss = onDismiss

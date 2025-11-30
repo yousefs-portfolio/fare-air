@@ -4,6 +4,7 @@ import com.flyadeal.app.api.*
 import com.flyadeal.app.state.BookingFlowState
 import com.flyadeal.app.state.SearchCriteria
 import com.flyadeal.app.ui.components.velocity.DestinationTheme
+import com.flyadeal.app.ui.components.velocity.PassengerCounts
 import com.flyadeal.app.ui.screens.search.SearchField
 import com.flyadeal.app.ui.screens.search.VelocitySearchState
 import com.flyadeal.app.util.toDisplayMessage
@@ -127,11 +128,17 @@ class WasmSearchViewModel(
     }
 
     /**
-     * Updates passenger count (Velocity UI).
-     * For now, Velocity UI only supports adult passengers.
+     * Updates passenger counts (Velocity UI).
+     * Supports adults, children, and infants.
      */
-    fun setVelocityPassengerCount(count: Int) {
-        _velocityState.update { it.copy(passengerCount = count.coerceIn(1, 9)) }
+    fun setVelocityPassengerCount(counts: PassengerCounts) {
+        _velocityState.update {
+            it.copy(
+                adultsCount = counts.adults.coerceIn(1, 9),
+                childrenCount = counts.children.coerceIn(0, 8),
+                infantsCount = counts.infants.coerceIn(0, counts.adults.coerceAtMost(4))
+            )
+        }
     }
 
     /**
@@ -151,9 +158,9 @@ class WasmSearchViewModel(
                 destination = destination.code,
                 departureDate = date.toString(),
                 passengers = PassengerCountsDto(
-                    adults = state.passengerCount,
-                    children = 0,
-                    infants = 0
+                    adults = state.adultsCount,
+                    children = state.childrenCount,
+                    infants = state.infantsCount
                 )
             )
 
