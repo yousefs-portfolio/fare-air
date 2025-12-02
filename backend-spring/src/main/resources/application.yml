@@ -10,8 +10,8 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
 
-# Flyadeal Configuration
-flyadeal:
+# Fairair Configuration
+fairair:
   provider: mock
   cache:
     routes-ttl: 86400
@@ -22,7 +22,7 @@ flyadeal:
   security:
     jwt:
       # IMPORTANT: Override this with environment variable in production!
-      # Use: FLYADEAL_SECURITY_JWT_SECRET=your-production-secret
+      # Use: FAIRAIR_SECURITY_JWT_SECRET=your-production-secret
       secret: ${JWT_SECRET:development-only-secret-change-in-production-32chars}
       access-token-expiry-seconds: 900
       refresh-token-expiry-seconds: 604800
@@ -52,7 +52,7 @@ management:
 logging:
   level:
     root: INFO
-    com.flyadeal: INFO
+    com.fairair: INFO
     # Don't log sensitive security details
     org.springframework.security: WARN
   pattern:
@@ -64,7 +64,7 @@ spring:
     activate:
       on-profile: dev
 
-flyadeal:
+fairair:
   security:
     rate-limit:
       enabled: false
@@ -72,7 +72,7 @@ flyadeal:
 logging:
   level:
     root: DEBUG
-    com.flyadeal: DEBUG
+    com.fairair: DEBUG
 
 ---
 spring:
@@ -80,7 +80,7 @@ spring:
     activate:
       on-profile: prod
 
-flyadeal:
+fairair:
   security:
     cors:
       allowed-origins:
@@ -90,4 +90,4 @@ flyadeal:
 logging:
   level:
     root: WARN
-    com.flyadeal: INFO
+    com.fairair: INFO

@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document consolidates research findings for implementing the flyadeal airline booking platform. All technology choices are prescribed by the master plan; research focuses on best practices, integration patterns, and implementation guidance.
+This document consolidates research findings for implementing the fairair airline booking platform. All technology choices are prescribed by the master plan; research focuses on best practices, integration patterns, and implementation guidance.
 
 ---
 
@@ -59,9 +59,9 @@ Use Quarkus with RESTEasy Reactive for the BFF (Backend for Frontend) layer.
 # application.properties
 quarkus.http.cors=true
 quarkus.http.cors.origins=http://localhost:8081,http://localhost:3000
-flyadeal.provider=mock  # Toggle: mock | real
-flyadeal.cache.routes-ttl=86400  # 24 hours in seconds
-flyadeal.cache.search-ttl=300    # 5 minutes
+fairair.provider=mock  # Toggle: mock | real
+fairair.cache.routes-ttl=86400  # 24 hours in seconds
+fairair.cache.search-ttl=300    # 5 minutes
 ```
 
 ### Alternatives Considered
@@ -241,7 +241,7 @@ val searchCache: Cache<String, FlightResponse> = Caffeine.newBuilder()
 Implement bidirectional layout support with runtime language switching using Compose's `CompositionLocalProvider`.
 
 ### Rationale
-- flyadeal serves Arabic-speaking market (Saudi Arabia)
+- fairair serves Arabic-speaking market (Saudi Arabia)
 - RTL is not just text direction but complete layout mirroring
 - Compose supports `LayoutDirection` natively
 
@@ -254,12 +254,12 @@ Implement bidirectional layout support with runtime language switching using Com
 ### Implementation Pattern
 ```kotlin
 @Composable
-fun FlyadealApp(language: Language) {
+fun FairairApp(language: Language) {
     val layoutDirection = if (language == Language.ARABIC)
         LayoutDirection.Rtl else LayoutDirection.Ltr
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-        FlyadealTheme {
+        FairairTheme {
             // App content
         }
     }
@@ -351,7 +351,7 @@ Define `NavitaireClient` interface with two implementations: `MockNavitaireClien
 ### Rationale
 - Decouples backend from external dependency
 - Enables local development without Navitaire credentials
-- Toggle via configuration property `flyadeal.provider`
+- Toggle via configuration property `fairair.provider`
 
 ### Interface Design
 ```kotlin
@@ -362,13 +362,13 @@ interface NavitaireClient {
 }
 
 @ApplicationScoped
-@IfBuildProperty(name = "flyadeal.provider", stringValue = "mock")
+@IfBuildProperty(name = "fairair.provider", stringValue = "mock")
 class MockNavitaireClient : NavitaireClient {
     // Read from resources/mock-data/*.json with 0.5-1.5s delay
 }
 
 @ApplicationScoped
-@IfBuildProperty(name = "flyadeal.provider", stringValue = "real")
+@IfBuildProperty(name = "fairair.provider", stringValue = "real")
 class RealNavitaireClient : NavitaireClient {
     // Feign/RestClient to external Navitaire URLs (skeleton)
 }

@@ -16,7 +16,7 @@
 
 ```bash
 git clone <repository-url>
-cd flyadeal
+cd fairair
 git checkout 004-fairair-production-ready
 ```
 
@@ -50,14 +50,14 @@ Web app available at `http://localhost:8081`
 
 ## Development Workflow
 
-### Brand Changes (flyadeal → FairAir)
+### Brand Changes (fairair → FairAir)
 
 1. **Text References**: Update all string literals
-   - `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/localization/Strings.kt`
+   - `apps-kmp/src/commonMain/kotlin/com/fairair/app/localization/Strings.kt`
    - `apps-kmp/src/wasmJsMain/resources/index.html`
 
 2. **Color Scheme**: Update theme colors
-   - `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/theme/VelocityColors.kt`
+   - `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/theme/VelocityColors.kt`
 
    New palette:
    ```kotlin
@@ -67,7 +67,7 @@ Web app available at `http://localhost:8081`
    ```
 
 3. **Package Names**: Consider renaming if required
-   - `com.flyadeal` → `com.fairair`
+   - `com.fairair` → `com.fairair`
 
 ### Stub Audit
 
@@ -129,7 +129,7 @@ grep -rn "TODO\|FIXME\|stub\|placeholder\|workaround" \
 
 - [ ] App displays "FairAir" on all screens
 - [ ] Teal/coral color scheme applied
-- [ ] No "flyadeal" text references remain
+- [ ] No "fairair" text references remain
 - [ ] Search flow works end-to-end
 - [ ] Booking confirmation displays
 - [ ] Arabic language works with RTL

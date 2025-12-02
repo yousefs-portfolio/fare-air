@@ -3,7 +3,7 @@
 **Feature Branch**: `001-airline-booking-platform`
 **Created**: 2025-11-25
 **Status**: Draft
-**Input**: User description: "Full-stack Airline Booking Platform using Kotlin Multiplatform with Quarkus backend and Compose Multiplatform frontend for flyadeal in-housing"
+**Input**: User description: "Full-stack Airline Booking Platform using Kotlin Multiplatform with Quarkus backend and Compose Multiplatform frontend for fairair in-housing"
 
 ## Clarifications
 
@@ -17,7 +17,7 @@
 
 ### User Story 1 - Search Available Flights (Priority: P1)
 
-A traveler opens the flyadeal app to search for flights between two cities. They select their departure city, and the app intelligently filters destination options to show only valid route connections. They pick a destination, select their travel date, specify the number of passengers, and initiate a search. The system displays available flights with departure times, arrival times, flight duration, and pricing.
+A traveler opens the fairair app to search for flights between two cities. They select their departure city, and the app intelligently filters destination options to show only valid route connections. They pick a destination, select their travel date, specify the number of passengers, and initiate a search. The system displays available flights with departure times, arrival times, flight duration, and pricing.
 
 **Why this priority**: Flight search is the core entry point for all bookings. Without the ability to search flights, no other functionality in the booking flow can be accessed. This represents the minimum viable product.
 
@@ -129,7 +129,7 @@ A traveler has successfully completed a booking. They see a confirmation screen 
 
 A traveler prefers to use the app in Arabic. They access language settings and switch from English to Arabic. The entire app interface immediately updates to display Arabic text with right-to-left (RTL) layout, including proper text alignment, navigation flow, and UI element positioning.
 
-**Why this priority**: flyadeal serves a predominantly Arabic-speaking market in Saudi Arabia. Language support is essential for market accessibility and user experience but not blocking for core booking functionality.
+**Why this priority**: fairair serves a predominantly Arabic-speaking market in Saudi Arabia. Language support is essential for market accessibility and user experience but not blocking for core booking functionality.
 
 **Independent Test**: Can be tested by changing language settings and verifying all UI elements, text, and layout direction update correctly. Delivers value by making the app accessible to Arabic-speaking users.
 

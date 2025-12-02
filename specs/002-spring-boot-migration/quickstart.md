@@ -42,7 +42,7 @@ The server starts on `http://localhost:8080`.
 ./gradlew :backend-spring:test
 
 # Single test class
-./gradlew :backend-spring:test --tests "com.flyadeal.controller.BookingControllerTest"
+./gradlew :backend-spring:test --tests "com.fairair.controller.BookingControllerTest"
 ```
 
 ### Clean build
@@ -65,7 +65,7 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
 
-flyadeal:
+fairair:
   provider: mock  # or 'real' for Navitaire integration
   cache:
     routes-ttl: 86400   # 24 hours in seconds
@@ -90,9 +90,9 @@ management:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `SERVER_PORT` | HTTP port | 8080 |
-| `FLYADEAL_PROVIDER` | mock or real | mock |
-| `FLYADEAL_CACHE_ROUTES_TTL` | Routes cache TTL (seconds) | 86400 |
-| `FLYADEAL_CACHE_SEARCH_TTL` | Search cache TTL (seconds) | 300 |
+| `FAIRAIR_PROVIDER` | mock or real | mock |
+| `FAIRAIR_CACHE_ROUTES_TTL` | Routes cache TTL (seconds) | 86400 |
+| `FAIRAIR_CACHE_SEARCH_TTL` | Search cache TTL (seconds) | 300 |
 
 ## API Endpoints
 
@@ -163,7 +163,7 @@ curl http://localhost:8080/v1/booking/ABC123
 ## Project Structure After Migration
 
 ```
-flyadeal/
+fairair/
 ├── settings.gradle.kts          # Updated: backend-spring instead of backend-quarkus
 ├── gradle/libs.versions.toml    # Updated: Spring Boot dependencies added
 ├── shared-contract/             # UNCHANGED
@@ -172,8 +172,8 @@ flyadeal/
     ├── build.gradle.kts
     └── src/
         ├── main/
-        │   ├── kotlin/com/flyadeal/
-        │   │   ├── FlyadealApplication.kt
+        │   ├── kotlin/com/fairair/
+        │   │   ├── FairairApplication.kt
         │   │   ├── cache/
         │   │   ├── client/
         │   │   ├── config/
@@ -233,4 +233,4 @@ Ensure `JavaTimeModule` and `KotlinModule` are registered in the ObjectMapper co
 Verify CORS configuration includes the frontend origin URLs in `CorsConfig.kt`.
 
 ### Provider not switching
-Restart the application after changing `flyadeal.provider` - the conditional beans are evaluated at startup.
+Restart the application after changing `fairair.provider` - the conditional beans are evaluated at startup.

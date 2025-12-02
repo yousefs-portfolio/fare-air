@@ -3,7 +3,7 @@
 **Feature Branch**: `004-fairair-production-ready`
 **Created**: 2025-11-29
 **Status**: Draft
-**Input**: User description: "Make sure the app is fully functional end to end with no stubs or todos or workarounds. 100% production ready the only thing we should be mocking is the navitaire api. also, change the flyadeal branding to FairAir and choose a different but similar color scheme"
+**Input**: User description: "Make sure the app is fully functional end to end with no stubs or todos or workarounds. 100% production ready the only thing we should be mocking is the navitaire api. also, change the fairair branding to FairAir and choose a different but similar color scheme"
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -30,12 +30,12 @@ Users experience a consistent FairAir brand throughout the application, with the
 
 **Why this priority**: Brand identity is fundamental to user trust and recognition. All user-facing elements must reflect the new brand before launch.
 
-**Independent Test**: Can be verified by navigating through all screens and confirming FairAir branding, colors, and name appear consistently with no flyadeal references remaining.
+**Independent Test**: Can be verified by navigating through all screens and confirming FairAir branding, colors, and name appear consistently with no fairair references remaining.
 
 **Acceptance Scenarios**:
 
 1. **Given** a user opens the app, **When** the app loads, **Then** they see the FairAir logo and brand colors (teal primary, coral accent).
-2. **Given** a user navigates through the app, **When** they view any screen, **Then** all text references "FairAir" with no mentions of "flyadeal".
+2. **Given** a user navigates through the app, **When** they view any screen, **Then** all text references "FairAir" with no mentions of "fairair".
 3. **Given** a user completes a booking, **When** they receive confirmation, **Then** all communications use FairAir branding and contact information.
 
 ---
@@ -136,7 +136,7 @@ Users can save their booking preferences and view their booking history, allowin
 ### Measurable Outcomes
 
 - **SC-001**: Users can complete a flight search and booking in under 3 minutes
-- **SC-002**: 100% of screens display FairAir branding with zero flyadeal references
+- **SC-002**: 100% of screens display FairAir branding with zero fairair references
 - **SC-003**: Application functions identically on Android, iOS, and web platforms
 - **SC-004**: All user-facing text is available in both English and Arabic
 - **SC-005**: Zero TODO comments, stub implementations, or placeholder code remains in production code

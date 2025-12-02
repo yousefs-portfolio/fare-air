@@ -112,7 +112,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.flyadeal.app"
+    namespace = "com.fairair.app"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
@@ -120,7 +120,7 @@ android {
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
-        applicationId = "com.flyadeal.app"
+        applicationId = "com.fairair.app"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

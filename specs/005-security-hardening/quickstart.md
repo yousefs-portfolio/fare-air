@@ -28,7 +28,7 @@
    Update `application.yml`:
    ```yaml
    # backend-spring/src/main/resources/application.yml
-   flyadeal:
+   fairair:
      cors:
        allowed-origins:
          - https://fairair.com
@@ -38,7 +38,7 @@
        max-age: 3600
 
    # Development override in application-dev.yml
-   flyadeal:
+   fairair:
      cors:
        allowed-origins:
          - http://localhost:3000
@@ -49,7 +49,7 @@
 
    ```yaml
    # backend-spring/src/main/resources/application.yml
-   flyadeal:
+   fairair:
      rate-limit:
        enabled: true
        public:
@@ -209,7 +209,7 @@ androidMain.dependencies {
 ```kotlin
 @Component
 class RateLimitFilter(
-    @Value("\${flyadeal.rate-limit.public.limit}") private val limit: Long
+    @Value("\${fairair.rate-limit.public.limit}") private val limit: Long
 ) : WebFilter {
     private val buckets = Caffeine.newBuilder()
         .expireAfterAccess(1, TimeUnit.HOURS)

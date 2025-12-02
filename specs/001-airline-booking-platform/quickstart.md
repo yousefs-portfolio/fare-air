@@ -142,7 +142,7 @@ Or via command line:
 
 **Configuration:**
 - Edit `backend-quarkus/src/main/resources/application.properties`
-- Toggle mock/real provider: `flyadeal.provider=mock`
+- Toggle mock/real provider: `fairair.provider=mock`
 
 ### Frontend Development
 
@@ -186,7 +186,7 @@ Or via command line:
 ### Run Specific Test
 
 ```bash
-./gradlew :backend-quarkus:test --tests "com.flyadeal.backend.service.FlightServiceTest"
+./gradlew :backend-quarkus:test --tests "com.fairair.backend.service.FlightServiceTest"
 ```
 
 ---
@@ -234,11 +234,11 @@ quarkus.http.cors=true
 quarkus.http.cors.origins=http://localhost:8081,http://localhost:3000
 
 # Provider toggle
-flyadeal.provider=mock
+fairair.provider=mock
 
 # Cache TTLs (seconds)
-flyadeal.cache.routes-ttl=86400
-flyadeal.cache.search-ttl=300
+fairair.cache.routes-ttl=86400
+fairair.cache.search-ttl=300
 ```
 
 ### Frontend (Ktor Client)
@@ -250,7 +250,7 @@ flyadeal.cache.search-ttl=300
 const val API_BASE_URL = "http://localhost:8080"
 
 // Production (replace during build)
-// const val API_BASE_URL = "https://api.flyadeal.com"
+// const val API_BASE_URL = "https://api.fairair.com"
 ```
 
 ---

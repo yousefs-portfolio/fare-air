@@ -1,16 +1,16 @@
 openapi: 3.1.0
 info:
-  title: flyadeal Booking API
+  title: fairair Booking API
   description: |
-    BFF (Backend for Frontend) API for the flyadeal airline booking platform.
+    BFF (Backend for Frontend) API for the fairair airline booking platform.
     This API serves the Compose Multiplatform frontend applications (Android, iOS, Web).
   version: 1.0.0
   contact:
-    name: flyadeal Development Team
+    name: fairair Development Team
 servers:
   - url: http://localhost:8080
     description: Local development server
-  - url: https://api.flyadeal.com
+  - url: https://api.fairair.com
     description: Production server
 
 tags:

@@ -105,26 +105,26 @@
 ### Implementation Summary (2025-11-30)
 
 **Files Created:**
-- `backend-spring/src/main/kotlin/com/flyadeal/security/JwtTokenProvider.kt` - JWT token generation/validation
-- `backend-spring/src/main/kotlin/com/flyadeal/security/JwtAuthenticationFilter.kt` - WebFlux auth filter
-- `backend-spring/src/main/kotlin/com/flyadeal/security/SecurityConfig.kt` - Spring Security WebFlux config
-- `backend-spring/src/main/kotlin/com/flyadeal/security/SecurityProperties.kt` - Security configuration properties
-- `backend-spring/src/main/kotlin/com/flyadeal/security/RateLimitFilter.kt` - Bucket4j rate limiting
-- `backend-spring/src/main/kotlin/com/flyadeal/security/SecurityHeadersFilter.kt` - HTTP security headers
-- `backend-spring/src/main/kotlin/com/flyadeal/controller/AuthController.kt` - Login/refresh/logout endpoints
+- `backend-spring/src/main/kotlin/com/fairair/security/JwtTokenProvider.kt` - JWT token generation/validation
+- `backend-spring/src/main/kotlin/com/fairair/security/JwtAuthenticationFilter.kt` - WebFlux auth filter
+- `backend-spring/src/main/kotlin/com/fairair/security/SecurityConfig.kt` - Spring Security WebFlux config
+- `backend-spring/src/main/kotlin/com/fairair/security/SecurityProperties.kt` - Security configuration properties
+- `backend-spring/src/main/kotlin/com/fairair/security/RateLimitFilter.kt` - Bucket4j rate limiting
+- `backend-spring/src/main/kotlin/com/fairair/security/SecurityHeadersFilter.kt` - HTTP security headers
+- `backend-spring/src/main/kotlin/com/fairair/controller/AuthController.kt` - Login/refresh/logout endpoints
 - `apps-kmp/proguard-rules.pro` - ProGuard rules for Android minification
 
 **Files Modified:**
-- `backend-spring/src/main/kotlin/com/flyadeal/service/FlightService.kt` - Removed runBlocking
-- `backend-spring/src/main/kotlin/com/flyadeal/cache/CacheService.kt` - Added suspend-aware methods
-- `backend-spring/src/main/kotlin/com/flyadeal/config/CorsConfig.kt` - Uses SecurityProperties
-- `backend-spring/src/main/kotlin/com/flyadeal/config/FlyadealProperties.kt` - Added timeout config
-- `backend-spring/src/main/kotlin/com/flyadeal/client/RealNavitaireClient.kt` - Added timeout wrapper
+- `backend-spring/src/main/kotlin/com/fairair/service/FlightService.kt` - Removed runBlocking
+- `backend-spring/src/main/kotlin/com/fairair/cache/CacheService.kt` - Added suspend-aware methods
+- `backend-spring/src/main/kotlin/com/fairair/config/CorsConfig.kt` - Uses SecurityProperties
+- `backend-spring/src/main/kotlin/com/fairair/config/FairairProperties.kt` - Added timeout config
+- `backend-spring/src/main/kotlin/com/fairair/client/RealNavitaireClient.kt` - Added timeout wrapper
 - `backend-spring/src/main/resources/application.yml` - Security config + profiles
 - `backend-spring/build.gradle.kts` - Added security dependencies
 - `gradle/libs.versions.toml` - Added jjwt and bucket4j versions
 - `apps-kmp/build.gradle.kts` - Enabled minification, BuildConfig
-- `apps-kmp/src/wasmJsMain/kotlin/com/flyadeal/app/WasmApp.kt` - Removed test card hints
-- `apps-kmp/src/wasmJsMain/kotlin/com/flyadeal/app/main.kt` - Dynamic debug detection
-- `apps-kmp/src/androidMain/kotlin/com/flyadeal/app/MainActivity.kt` - BuildConfig.IS_DEBUG
-- `apps-kmp/src/iosMain/kotlin/com/flyadeal/app/MainViewController.kt` - Platform.isDebugBinary
+- `apps-kmp/src/wasmJsMain/kotlin/com/fairair/app/WasmApp.kt` - Removed test card hints
+- `apps-kmp/src/wasmJsMain/kotlin/com/fairair/app/main.kt` - Dynamic debug detection
+- `apps-kmp/src/androidMain/kotlin/com/fairair/app/MainActivity.kt` - BuildConfig.IS_DEBUG
+- `apps-kmp/src/iosMain/kotlin/com/fairair/app/MainViewController.kt` - Platform.isDebugBinary

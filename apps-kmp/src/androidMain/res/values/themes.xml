@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Flyadeal" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/flyadeal_purple</item>
+    <style name="Theme.Fairair" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/fairair_purple</item>
         <item name="android:navigationBarColor">@color/white</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>

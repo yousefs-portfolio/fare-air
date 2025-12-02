@@ -67,7 +67,7 @@ specs/005-security-hardening/
 # Existing project structure with security additions
 
 shared-contract/
-└── src/commonMain/kotlin/com/flyadeal/contract/
+└── src/commonMain/kotlin/com/fairair/contract/
     ├── auth/                    # NEW: Authentication DTOs
     │   ├── LoginRequest.kt
     │   ├── LoginResponse.kt
@@ -77,7 +77,7 @@ shared-contract/
         └── RateLimitResponse.kt
 
 backend-spring/
-└── src/main/kotlin/com/flyadeal/
+└── src/main/kotlin/com/fairair/
     ├── config/
     │   ├── SecurityConfig.kt        # NEW: Spring Security configuration
     │   ├── CorsConfig.kt            # MODIFY: Restrict origins
@@ -95,7 +95,7 @@ backend-spring/
 
 apps-kmp/
 └── src/
-    ├── commonMain/kotlin/com/flyadeal/app/
+    ├── commonMain/kotlin/com/fairair/app/
     │   ├── security/                # NEW: Security utilities
     │   │   ├── TokenManager.kt
     │   │   ├── SecureStorage.kt

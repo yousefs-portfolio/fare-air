@@ -35,10 +35,10 @@
 -keep class cafe.adriel.voyager.** { *; }
 
 # Keep contract model classes (shared DTOs)
--keep class com.flyadeal.contract.** { *; }
+-keep class com.fairair.contract.** { *; }
 
 # Keep app API classes
--keep class com.flyadeal.app.api.** { *; }
+-keep class com.fairair.app.api.** { *; }
 
 # OkHttp (used by Ktor on Android)
 -dontwarn okhttp3.**

@@ -5,7 +5,7 @@
 
 ## Summary
 
-Transform the existing flyadeal airline booking application into FairAir with a complete rebrand (new name, teal/coral color scheme) while ensuring 100% production readiness. This includes removing all stubs, TODOs, and workarounds throughout the codebase, completing the end-to-end booking flow, and ensuring cross-platform consistency across Android, iOS, and Web (Wasm). The only mock permitted is the Navitaire API client.
+Transform the existing fairair airline booking application into FairAir with a complete rebrand (new name, teal/coral color scheme) while ensuring 100% production readiness. This includes removing all stubs, TODOs, and workarounds throughout the codebase, completing the end-to-end booking flow, and ensuring cross-platform consistency across Android, iOS, and Web (Wasm). The only mock permitted is the Navitaire API client.
 
 ## Technical Context
 
@@ -54,13 +54,13 @@ specs/004-fairair-production-ready/
 # Kotlin Multiplatform Structure
 
 shared-contract/
-└── src/commonMain/kotlin/com/flyadeal/contract/
+└── src/commonMain/kotlin/com/fairair/contract/
     ├── dto/           # DTOs shared between frontend/backend
     ├── routes/        # API route definitions
     └── models/        # Domain models
 
 backend-spring/
-└── src/main/kotlin/com/flyadeal/
+└── src/main/kotlin/com/fairair/
     ├── client/        # NavitaireClient (Mock + Real implementations)
     ├── config/        # Spring configuration, CORS, caching
     ├── controller/    # REST endpoints
@@ -68,7 +68,7 @@ backend-spring/
     └── service/       # Business logic
 
 apps-kmp/
-├── src/commonMain/kotlin/com/flyadeal/app/
+├── src/commonMain/kotlin/com/fairair/app/
 │   ├── di/            # Koin dependency injection
 │   ├── localization/  # Strings, language switching
 │   ├── state/         # Booking flow state
@@ -83,7 +83,7 @@ apps-kmp/
 ```
 
 **Structure Decision**: Existing KMP monorepo structure preserved. Changes focus on:
-1. Renaming brand references (flyadeal → FairAir)
+1. Renaming brand references (fairair → FairAir)
 2. Updating color scheme (purple/yellow → teal/coral)
 3. Completing stub implementations
 4. Ensuring cross-platform parity

@@ -16,7 +16,7 @@ This document defines the data models required for implementing security feature
 
 **Purpose**: Represents the payload of a JWT access token.
 
-**Location**: `shared-contract/src/commonMain/kotlin/com/flyadeal/contract/auth/JwtClaims.kt`
+**Location**: `shared-contract/src/commonMain/kotlin/com/fairair/contract/auth/JwtClaims.kt`
 
 ```kotlin
 @Serializable
@@ -49,7 +49,7 @@ enum class TokenType {
 
 **Purpose**: Request payload for user authentication.
 
-**Location**: `shared-contract/src/commonMain/kotlin/com/flyadeal/contract/auth/LoginRequest.kt`
+**Location**: `shared-contract/src/commonMain/kotlin/com/fairair/contract/auth/LoginRequest.kt`
 
 ```kotlin
 @Serializable
@@ -71,7 +71,7 @@ data class LoginRequest(
 
 **Purpose**: Response payload containing authentication tokens.
 
-**Location**: `shared-contract/src/commonMain/kotlin/com/flyadeal/contract/auth/LoginResponse.kt`
+**Location**: `shared-contract/src/commonMain/kotlin/com/fairair/contract/auth/LoginResponse.kt`
 
 ```kotlin
 @Serializable
@@ -96,7 +96,7 @@ data class LoginResponse(
 
 **Purpose**: Request to obtain new access token using refresh token.
 
-**Location**: `shared-contract/src/commonMain/kotlin/com/flyadeal/contract/auth/TokenRefreshRequest.kt`
+**Location**: `shared-contract/src/commonMain/kotlin/com/fairair/contract/auth/TokenRefreshRequest.kt`
 
 ```kotlin
 @Serializable
@@ -114,7 +114,7 @@ data class TokenRefreshRequest(
 
 **Purpose**: Server-side storage of refresh token metadata for revocation support.
 
-**Location**: `backend-spring/src/main/kotlin/com/flyadeal/security/RefreshTokenEntity.kt`
+**Location**: `backend-spring/src/main/kotlin/com/fairair/security/RefreshTokenEntity.kt`
 
 ```kotlin
 data class RefreshTokenEntity(
@@ -150,7 +150,7 @@ data class RefreshTokenEntity(
 
 **Purpose**: Tracks request counts for rate limiting decisions.
 
-**Location**: `backend-spring/src/main/kotlin/com/flyadeal/security/RateLimitRecord.kt`
+**Location**: `backend-spring/src/main/kotlin/com/fairair/security/RateLimitRecord.kt`
 
 ```kotlin
 data class RateLimitRecord(
@@ -178,7 +178,7 @@ enum class RateLimitTier {
 
 **Purpose**: Response when rate limit is exceeded.
 
-**Location**: `shared-contract/src/commonMain/kotlin/com/flyadeal/contract/security/RateLimitResponse.kt`
+**Location**: `shared-contract/src/commonMain/kotlin/com/fairair/contract/security/RateLimitResponse.kt`
 
 ```kotlin
 @Serializable
@@ -200,7 +200,7 @@ data class RateLimitResponse(
 
 **Purpose**: Records security-relevant events for audit trail.
 
-**Location**: `backend-spring/src/main/kotlin/com/flyadeal/security/AuditLogEntry.kt`
+**Location**: `backend-spring/src/main/kotlin/com/fairair/security/AuditLogEntry.kt`
 
 ```kotlin
 data class AuditLogEntry(
@@ -250,7 +250,7 @@ enum class AuditOutcome {
 
 **Purpose**: Structure for locally cached booking data.
 
-**Location**: `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/security/EncryptedBooking.kt`
+**Location**: `apps-kmp/src/commonMain/kotlin/com/fairair/app/security/EncryptedBooking.kt`
 
 ```kotlin
 @Serializable
@@ -270,7 +270,7 @@ data class EncryptedBooking(
 
 **Purpose**: Defines keys used in secure storage.
 
-**Location**: `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/security/SecureStorageKey.kt`
+**Location**: `apps-kmp/src/commonMain/kotlin/com/fairair/app/security/SecureStorageKey.kt`
 
 ```kotlin
 object SecureStorageKey {
@@ -289,7 +289,7 @@ object SecureStorageKey {
 
 **Purpose**: Defines required HTTP security headers.
 
-**Location**: `backend-spring/src/main/kotlin/com/flyadeal/config/SecurityHeaders.kt`
+**Location**: `backend-spring/src/main/kotlin/com/fairair/config/SecurityHeaders.kt`
 
 ```kotlin
 object SecurityHeaders {
@@ -311,7 +311,7 @@ object SecurityHeaders {
 
 **Purpose**: Defines allowed CORS origins.
 
-**Location**: `backend-spring/src/main/kotlin/com/flyadeal/config/CorsConfig.kt`
+**Location**: `backend-spring/src/main/kotlin/com/fairair/config/CorsConfig.kt`
 
 ```kotlin
 data class CorsConfiguration(

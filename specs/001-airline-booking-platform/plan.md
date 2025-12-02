@@ -5,7 +5,7 @@
 
 ## Summary
 
-Build a production-ready, full-stack airline booking platform for flyadeal using Kotlin Multiplatform. The system enables travelers to search flights, select fare families, enter passenger details, add ancillaries, complete mock payments, and receive booking confirmations with PNR codes. The architecture comprises a Quarkus BFF backend with Navitaire integration (mock/real), and a Compose Multiplatform frontend targeting Android, iOS, and Web (Wasm) from a single codebase with full Arabic RTL support.
+Build a production-ready, full-stack airline booking platform for fairair using Kotlin Multiplatform. The system enables travelers to search flights, select fare families, enter passenger details, add ancillaries, complete mock payments, and receive booking confirmations with PNR codes. The architecture comprises a Quarkus BFF backend with Navitaire integration (mock/real), and a Compose Multiplatform frontend targeting Android, iOS, and Web (Wasm) from a single codebase with full Arabic RTL support.
 
 ## Technical Context
 
@@ -90,7 +90,7 @@ specs/001-airline-booking-platform/
 │   └── src/
 │       └── commonMain/
 │           └── kotlin/
-│               └── com/flyadeal/shared/
+│               └── com/fairair/shared/
 │                   ├── api/
 │                   │   └── ApiRoutes.kt           # API path constants
 │                   ├── dtos/
@@ -109,7 +109,7 @@ specs/001-airline-booking-platform/
 │   └── src/
 │       ├── main/
 │       │   ├── kotlin/
-│       │   │   └── com/flyadeal/backend/
+│       │   │   └── com/fairair/backend/
 │       │   │       ├── api/
 │       │   │       │   ├── ConfigResource.kt      # /v1/config/*
 │       │   │       │   ├── SearchResource.kt      # /v1/search
@@ -133,7 +133,7 @@ specs/001-airline-booking-platform/
 │       │           └── navitaire_pnr.json
 │       └── test/
 │           └── kotlin/
-│               └── com/flyadeal/backend/
+│               └── com/fairair/backend/
 │                   ├── api/
 │                   │   └── ConfigResourceTest.kt
 │                   └── service/
@@ -144,12 +144,12 @@ specs/001-airline-booking-platform/
     └── src/
         ├── commonMain/
         │   └── kotlin/
-        │       └── com/flyadeal/app/
+        │       └── com/fairair/app/
         │           ├── App.kt                     # Main entry point
         │           ├── di/
         │           │   └── AppModule.kt           # Koin modules
         │           ├── theme/
-        │           │   ├── FlyadealTheme.kt
+        │           │   ├── FairairTheme.kt
         │           │   ├── Color.kt
         │           │   └── Typography.kt
         │           ├── navigation/
@@ -193,16 +193,16 @@ specs/001-airline-booking-platform/
         │               └── LocalStorage.kt
         ├── androidMain/
         │   └── kotlin/
-        │       └── com/flyadeal/app/
+        │       └── com/fairair/app/
         │           ├── MainActivity.kt
         │           └── MainApplication.kt
         ├── iosMain/
         │   └── kotlin/
-        │       └── com/flyadeal/app/
+        │       └── com/fairair/app/
         │           └── MainViewController.kt
         └── wasmJsMain/
             └── kotlin/
-                └── com/flyadeal/app/
+                └── com/fairair/app/
                     └── Main.kt
 ```
 

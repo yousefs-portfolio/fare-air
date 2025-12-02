@@ -13,9 +13,9 @@
 
 ## Path Conventions
 
-- **Backend module**: `backend-spring/src/main/kotlin/com/flyadeal/`
+- **Backend module**: `backend-spring/src/main/kotlin/com/fairair/`
 - **Resources**: `backend-spring/src/main/resources/`
-- **Tests**: `backend-spring/src/test/kotlin/com/flyadeal/`
+- **Tests**: `backend-spring/src/test/kotlin/com/fairair/`
 - **Build**: `backend-spring/build.gradle.kts`
 - **Root build**: `settings.gradle.kts`, `gradle/libs.versions.toml`
 
@@ -29,7 +29,7 @@
 - [x] T002 Create backend-spring/ directory structure mirroring plan.md layout
 - [x] T003 Create backend-spring/build.gradle.kts with Spring Boot WebFlux dependencies and kotlin-spring plugin
 - [x] T004 Update settings.gradle.kts to include backend-spring module and remove backend-quarkus
-- [x] T005 Create backend-spring/src/main/resources/application.yml with server, flyadeal, and management configuration matching current application.properties
+- [x] T005 Create backend-spring/src/main/resources/application.yml with server, fairair, and management configuration matching current application.properties
 
 ---
 
@@ -39,13 +39,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T006 Create backend-spring/src/main/kotlin/com/flyadeal/FlyadealApplication.kt with @SpringBootApplication main class
-- [x] T007 [P] Create backend-spring/src/main/kotlin/com/flyadeal/config/FlyadealProperties.kt with @ConfigurationProperties data classes for flyadeal.* config
-- [x] T008 [P] Create backend-spring/src/main/kotlin/com/flyadeal/config/JacksonConfig.kt with ObjectMapper bean (JavaTimeModule, KotlinModule, ISO-8601 dates, ignore unknown properties)
-- [x] T009 [P] Create backend-spring/src/main/kotlin/com/flyadeal/config/CorsConfig.kt implementing WebFluxConfigurer with CORS mappings matching current Quarkus config
-- [x] T010 Create backend-spring/src/main/kotlin/com/flyadeal/config/CacheConfig.kt with Caffeine CacheManager bean (routes 24h TTL, searches 5min TTL)
-- [x] T011 Create backend-spring/src/main/kotlin/com/flyadeal/exception/Exceptions.kt with FlyadealException hierarchy (NotFoundException, ValidationException, BookingException, ExternalServiceException)
-- [x] T012 Create backend-spring/src/main/kotlin/com/flyadeal/exception/GlobalExceptionHandler.kt with @ControllerAdvice and @ExceptionHandler methods matching current error response format
+- [x] T006 Create backend-spring/src/main/kotlin/com/fairair/FairairApplication.kt with @SpringBootApplication main class
+- [x] T007 [P] Create backend-spring/src/main/kotlin/com/fairair/config/FairairProperties.kt with @ConfigurationProperties data classes for fairair.* config
+- [x] T008 [P] Create backend-spring/src/main/kotlin/com/fairair/config/JacksonConfig.kt with ObjectMapper bean (JavaTimeModule, KotlinModule, ISO-8601 dates, ignore unknown properties)
+- [x] T009 [P] Create backend-spring/src/main/kotlin/com/fairair/config/CorsConfig.kt implementing WebFluxConfigurer with CORS mappings matching current Quarkus config
+- [x] T010 Create backend-spring/src/main/kotlin/com/fairair/config/CacheConfig.kt with Caffeine CacheManager bean (routes 24h TTL, searches 5min TTL)
+- [x] T011 Create backend-spring/src/main/kotlin/com/fairair/exception/Exceptions.kt with FairairException hierarchy (NotFoundException, ValidationException, BookingException, ExternalServiceException)
+- [x] T012 Create backend-spring/src/main/kotlin/com/fairair/exception/GlobalExceptionHandler.kt with @ControllerAdvice and @ExceptionHandler methods matching current error response format
 - [x] T013 Verify application starts with ./gradlew :backend-spring:bootRun and check actuator/health responds
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
@@ -60,11 +60,11 @@
 
 ### Implementation for User Story 1
 
-- [x] T014 [P] [US1] Create backend-spring/src/main/kotlin/com/flyadeal/client/NavitaireClient.kt interface with suspend functions (searchFlights, createBooking, getBooking, getRoutes, getStations)
-- [x] T015 [P] [US1] Migrate backend-spring/src/main/kotlin/com/flyadeal/service/FlightService.kt with @Service annotation preserving all business logic, convert to constructor injection
-- [x] T016 [US1] Migrate backend-spring/src/main/kotlin/com/flyadeal/service/BookingService.kt with @Service annotation preserving validation logic, convert to constructor injection
-- [x] T017 [US1] Create backend-spring/src/main/kotlin/com/flyadeal/controller/SearchController.kt with @RestController, @RequestMapping("/v1/search"), suspend POST endpoint returning identical response format
-- [x] T018 [US1] Create backend-spring/src/main/kotlin/com/flyadeal/controller/BookingController.kt with @RestController, @RequestMapping("/v1/booking"), suspend POST and GET endpoints preserving all DTOs and error handling
+- [x] T014 [P] [US1] Create backend-spring/src/main/kotlin/com/fairair/client/NavitaireClient.kt interface with suspend functions (searchFlights, createBooking, getBooking, getRoutes, getStations)
+- [x] T015 [P] [US1] Migrate backend-spring/src/main/kotlin/com/fairair/service/FlightService.kt with @Service annotation preserving all business logic, convert to constructor injection
+- [x] T016 [US1] Migrate backend-spring/src/main/kotlin/com/fairair/service/BookingService.kt with @Service annotation preserving validation logic, convert to constructor injection
+- [x] T017 [US1] Create backend-spring/src/main/kotlin/com/fairair/controller/SearchController.kt with @RestController, @RequestMapping("/v1/search"), suspend POST endpoint returning identical response format
+- [x] T018 [US1] Create backend-spring/src/main/kotlin/com/fairair/controller/BookingController.kt with @RestController, @RequestMapping("/v1/booking"), suspend POST and GET endpoints preserving all DTOs and error handling
 - [x] T019 [US1] Verify search endpoint returns identical JSON to Quarkus implementation using curl comparison
 - [x] T020 [US1] Verify booking endpoints return identical JSON to Quarkus implementation using curl comparison
 
@@ -80,8 +80,8 @@
 
 ### Implementation for User Story 2
 
-- [x] T021 [P] [US2] Migrate backend-spring/src/main/kotlin/com/flyadeal/cache/CacheService.kt with @Service and Caffeine cache integration, preserving TTL logic
-- [x] T022 [US2] Create backend-spring/src/main/kotlin/com/flyadeal/controller/ConfigController.kt with @RestController, @RequestMapping("/v1/config"), GET endpoints for /routes and /stations
+- [x] T021 [P] [US2] Migrate backend-spring/src/main/kotlin/com/fairair/cache/CacheService.kt with @Service and Caffeine cache integration, preserving TTL logic
+- [x] T022 [US2] Create backend-spring/src/main/kotlin/com/fairair/controller/ConfigController.kt with @RestController, @RequestMapping("/v1/config"), GET endpoints for /routes and /stations
 - [x] T023 [US2] Add @Cacheable annotations to CacheService methods for routes (24h) and stations (24h) caching
 - [x] T024 [US2] Verify /v1/config/routes returns identical JSON to Quarkus implementation
 - [x] T025 [US2] Verify /v1/config/stations returns identical JSON to Quarkus implementation
@@ -100,7 +100,7 @@
 ### Implementation for User Story 3
 
 - [x] T027 [US3] Configure Spring Boot Actuator in application.yml for health endpoint exposure with probes enabled
-- [x] T028 [US3] Create backend-spring/src/main/kotlin/com/flyadeal/controller/HealthController.kt with @RestController to map /health/* to actuator endpoints OR configure actuator base-path
+- [x] T028 [US3] Create backend-spring/src/main/kotlin/com/fairair/controller/HealthController.kt with @RestController to map /health/* to actuator endpoints OR configure actuator base-path
 - [x] T029 [US3] Verify /health returns {"status":"UP"} or compatible format
 - [x] T030 [US3] Verify /health/live returns 200 OK for liveness probe
 - [x] T031 [US3] Verify /health/ready returns 200 OK for readiness probe
@@ -117,11 +117,11 @@
 
 ### Implementation for User Story 4
 
-- [x] T032 [US4] Create backend-spring/src/main/kotlin/com/flyadeal/client/MockNavitaireClient.kt with @Service and @ConditionalOnProperty(name=["flyadeal.provider"], havingValue="mock", matchIfMissing=true)
+- [x] T032 [US4] Create backend-spring/src/main/kotlin/com/fairair/client/MockNavitaireClient.kt with @Service and @ConditionalOnProperty(name=["fairair.provider"], havingValue="mock", matchIfMissing=true)
 - [x] T033 [US4] Add delay simulation to MockNavitaireClient using config.mock.minDelay/maxDelay
-- [x] T034 [US4] Verify mock provider is used when flyadeal.provider=mock (default)
-- [x] T035 [US4] Create placeholder backend-spring/src/main/kotlin/com/flyadeal/client/RealNavitaireClient.kt with @Service and @ConditionalOnProperty(name=["flyadeal.provider"], havingValue="real") (implementation deferred)
-- [x] T036 [US4] Verify switching flyadeal.provider=real activates RealNavitaireClient (will fail as expected since real impl is placeholder)
+- [x] T034 [US4] Verify mock provider is used when fairair.provider=mock (default)
+- [x] T035 [US4] Create placeholder backend-spring/src/main/kotlin/com/fairair/client/RealNavitaireClient.kt with @Service and @ConditionalOnProperty(name=["fairair.provider"], havingValue="real") (implementation deferred)
+- [x] T036 [US4] Verify switching fairair.provider=real activates RealNavitaireClient (will fail as expected since real impl is placeholder)
 
 **Checkpoint**: Provider toggle should now work via configuration
 
@@ -181,7 +181,7 @@
 
 ```bash
 # Launch all config tasks together:
-Task: "Create FlyadealProperties.kt"
+Task: "Create FairairProperties.kt"
 Task: "Create JacksonConfig.kt"
 Task: "Create CorsConfig.kt"
 ```

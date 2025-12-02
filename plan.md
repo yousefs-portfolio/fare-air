@@ -1,4 +1,4 @@
-# Master Implementation Plan: Project "Shadow" (flyadeal In-Housing)
+# Master Implementation Plan: Project "Shadow" (fairair In-Housing)
 
 Target Audience: AI Coding Assistant (Claude Code / Copilot)
 
@@ -89,7 +89,7 @@ Architecture: Kotlin Multiplatform (Mobile/Web) + Quarkus (BFF Backend).
         
     - `RealNavitaireClient`: (Skeleton only) Setup for Feign/RestClient to hit external URLs.
         
-5. Add a configuration property `flyadeal.provider` to toggle between Mock and Real at runtime.
+5. Add a configuration property `fairair.provider` to toggle between Mock and Real at runtime.
     
 
 ### Step 2.2: The Caching Service
@@ -128,7 +128,7 @@ Architecture: Kotlin Multiplatform (Mobile/Web) + Quarkus (BFF Backend).
 
 ### Step 3.1: Design System & Theme
 
-1. Create a custom Material 3 Theme (`FlyadealTheme`).
+1. Create a custom Material 3 Theme (`FairairTheme`).
     
 2. Define the Brand Colors: Purple (Primary), Lime Green (Secondary/Accent).
     

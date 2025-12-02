@@ -53,10 +53,10 @@ open apps-kmp/iosApp/iosApp.xcodeproj
 ### UI Components (New for Velocity)
 
 ```
-apps-kmp/src/commonMain/kotlin/com/flyadeal/app/
+apps-kmp/src/commonMain/kotlin/com/fairair/app/
 ├── ui/
 │   ├── theme/
-│   │   ├── FlyadealTheme.kt        # Existing (keep for other screens)
+│   │   ├── FairairTheme.kt        # Existing (keep for other screens)
 │   │   └── VelocityTheme.kt        # NEW: Velocity design system
 │   │
 │   ├── components/

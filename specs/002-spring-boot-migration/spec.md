@@ -87,7 +87,7 @@ As a developer, I need the mock/real provider toggle to continue working so that
 - **FR-002**: System MUST return responses in the exact same JSON format using the shared-contract DTOs
 - **FR-003**: System MUST maintain the same HTTP status codes for all success and error scenarios
 - **FR-004**: System MUST implement the same caching strategy (24-hour TTL for routes/stations, 5-minute TTL for search results)
-- **FR-005**: System MUST support the provider toggle (`flyadeal.provider` configuration) for mock/real Navitaire client switching
+- **FR-005**: System MUST support the provider toggle (`fairair.provider` configuration) for mock/real Navitaire client switching
 - **FR-006**: System MUST handle global exceptions and return standardized error responses matching current format
 - **FR-007**: System MUST expose health endpoints (`/health`, `/health/live`, `/health/ready`) for monitoring
 - **FR-008**: System MUST use the same serialization configuration for date/time fields (ISO-8601 format)

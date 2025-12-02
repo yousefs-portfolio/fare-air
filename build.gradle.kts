@@ -11,7 +11,7 @@ plugins {
 }
 
 allprojects {
-    group = "com.flyadeal"
+    group = "com.fairair"
     version = "1.0.0-SNAPSHOT"
 
     repositories {

@@ -103,8 +103,8 @@ Use `@ConfigurationProperties` with Kotlin data classes for type-safe configurat
 
 ### Implementation Pattern
 ```kotlin
-@ConfigurationProperties(prefix = "flyadeal")
-data class FlyadealProperties(
+@ConfigurationProperties(prefix = "fairair")
+data class FairairProperties(
     val provider: String = "mock",
     val cache: CacheProperties = CacheProperties(),
     val mock: MockProperties = MockProperties()
@@ -145,8 +145,8 @@ Use `@ControllerAdvice` with `@ExceptionHandler` methods to replace JAX-RS `Exce
 ```kotlin
 // Quarkus (before)
 @Provider
-class FlyadealExceptionMapper : ExceptionMapper<FlyadealException> {
-    override fun toResponse(exception: FlyadealException): Response {
+class FairairExceptionMapper : ExceptionMapper<FairairException> {
+    override fun toResponse(exception: FairairException): Response {
         return Response.status(exception.statusCode).entity(ErrorResponse(...)).build()
     }
 }
@@ -154,8 +154,8 @@ class FlyadealExceptionMapper : ExceptionMapper<FlyadealException> {
 // Spring Boot (after)
 @ControllerAdvice
 class GlobalExceptionHandler {
-    @ExceptionHandler(FlyadealException::class)
-    fun handleFlyadealException(ex: FlyadealException): ResponseEntity<ErrorResponse> {
+    @ExceptionHandler(FairairException::class)
+    fun handleFairairException(ex: FairairException): ResponseEntity<ErrorResponse> {
         return ResponseEntity.status(ex.statusCode).body(ErrorResponse(...))
     }
 }
@@ -284,15 +284,15 @@ interface NavitaireClient {
 }
 
 @Service
-@ConditionalOnProperty(name = ["flyadeal.provider"], havingValue = "mock", matchIfMissing = true)
+@ConditionalOnProperty(name = ["fairair.provider"], havingValue = "mock", matchIfMissing = true)
 class MockNavitaireClient(
-    private val config: FlyadealProperties
+    private val config: FairairProperties
 ) : NavitaireClient {
     // Mock implementation
 }
 
 @Service
-@ConditionalOnProperty(name = ["flyadeal.provider"], havingValue = "real")
+@ConditionalOnProperty(name = ["fairair.provider"], havingValue = "real")
 class RealNavitaireClient : NavitaireClient {
     // Real implementation
 }
@@ -315,7 +315,7 @@ Continue using Caffeine cache library with Spring's `@Cacheable` integration.
 ```kotlin
 @Configuration
 @EnableCaching
-class CacheConfig(private val config: FlyadealProperties) {
+class CacheConfig(private val config: FairairProperties) {
     @Bean
     fun cacheManager(): CacheManager {
         val caches = mapOf(

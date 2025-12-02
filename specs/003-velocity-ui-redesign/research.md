@@ -215,7 +215,7 @@ Card(
 
 ### 8. Color System Migration
 
-**Decision**: Create new `VelocityColors` object alongside existing `FlyadealColors`, with gradual migration
+**Decision**: Create new `VelocityColors` object alongside existing `FairairColors`, with gradual migration
 
 **Rationale**:
 - New design uses different color palette (deep purple #120521, neon lime #ccff00)

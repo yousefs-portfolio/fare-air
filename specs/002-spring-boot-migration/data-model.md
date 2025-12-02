@@ -23,7 +23,7 @@ The data model documentation here serves as a reference for understanding the ex
 ## Core Entities (shared-contract)
 
 ### Station
-Represents an airport in the flyadeal network.
+Represents an airport in the fairair network.
 
 | Field | Type | Description |
 |-------|------|-------------|

@@ -7,7 +7,7 @@
 
 ## Overview
 
-Transform the existing flyadeal mobile/web application UI to match the "Velocity Experience" design language defined in design.html. This is a visual and interaction redesign focusing on:
+Transform the existing fairair mobile/web application UI to match the "Velocity Experience" design language defined in design.html. This is a visual and interaction redesign focusing on:
 
 - **Deep purple/black background** with gradient overlays
 - **Glassmorphism** aesthetic (frosted glass cards, blur effects)

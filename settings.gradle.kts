@@ -1,4 +1,4 @@
-rootProject.name = "flyadeal"
+rootProject.name = "fairair"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 

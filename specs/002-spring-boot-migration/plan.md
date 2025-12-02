@@ -5,7 +5,7 @@
 
 ## Summary
 
-Migrate the flyadeal BFF backend from Quarkus to Spring Boot WebFlux while maintaining 100% API compatibility. The migration involves replacing the `backend-quarkus` module entirely with a new `backend-spring` module using Spring WebFlux for reactive non-blocking request handling with native Kotlin coroutines support. All existing API contracts, response formats, error handling, and caching behavior must be preserved.
+Migrate the fairair BFF backend from Quarkus to Spring Boot WebFlux while maintaining 100% API compatibility. The migration involves replacing the `backend-quarkus` module entirely with a new `backend-spring` module using Spring WebFlux for reactive non-blocking request handling with native Kotlin coroutines support. All existing API contracts, response formats, error handling, and caching behavior must be preserved.
 
 ## Technical Context
 
@@ -52,10 +52,10 @@ specs/002-spring-boot-migration/
 # Current structure (Quarkus - to be removed)
 backend-quarkus/
 ├── build.gradle.kts
-└── src/main/kotlin/com/flyadeal/
+└── src/main/kotlin/com/fairair/
     ├── cache/CacheService.kt
     ├── client/NavitaireClient.kt, MockNavitaireClient.kt
-    ├── config/FlyadealConfig.kt
+    ├── config/FairairConfig.kt
     ├── controller/BookingController.kt, ConfigController.kt, HealthController.kt, SearchController.kt
     ├── exception/GlobalExceptionHandler.kt
     └── service/BookingService.kt, FlightService.kt
@@ -65,14 +65,14 @@ backend-spring/
 ├── build.gradle.kts              # Spring Boot dependencies
 └── src/
     ├── main/
-    │   ├── kotlin/com/flyadeal/
-    │   │   ├── FlyadealApplication.kt        # Spring Boot main class
+    │   ├── kotlin/com/fairair/
+    │   │   ├── FairairApplication.kt        # Spring Boot main class
     │   │   ├── cache/CacheService.kt         # Preserved logic, Spring @Bean
     │   │   ├── client/
     │   │   │   ├── NavitaireClient.kt        # Interface unchanged
     │   │   │   └── MockNavitaireClient.kt    # @ConditionalOnProperty
     │   │   ├── config/
-    │   │   │   ├── FlyadealConfig.kt         # @ConfigurationProperties
+    │   │   │   ├── FairairConfig.kt         # @ConfigurationProperties
     │   │   │   ├── CorsConfig.kt             # WebFlux CORS
     │   │   │   └── JacksonConfig.kt          # ObjectMapper customization
     │   │   ├── controller/
@@ -88,7 +88,7 @@ backend-spring/
     │   └── resources/
     │       └── application.yml               # Spring Boot config
     └── test/
-        └── kotlin/com/flyadeal/
+        └── kotlin/com/fairair/
             └── controller/                   # WebTestClient tests
                 ├── BookingControllerTest.kt
                 ├── ConfigControllerTest.kt
@@ -99,7 +99,7 @@ shared-contract/                   # DTOs - NO CHANGES
 apps-kmp/                          # Frontend - NO CHANGES
 ```
 
-**Structure Decision**: Replace `backend-quarkus/` module entirely with `backend-spring/` module. Preserve package structure (`com.flyadeal.*`) and class names to minimize diff complexity. Update `settings.gradle.kts` to reference new module.
+**Structure Decision**: Replace `backend-quarkus/` module entirely with `backend-spring/` module. Preserve package structure (`com.fairair.*`) and class names to minimize diff complexity. Update `settings.gradle.kts` to reference new module.
 
 ## Complexity Tracking
 

@@ -16,7 +16,7 @@
 ## Path Conventions
 
 Based on plan.md structure:
-- **Source**: `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/`
+- **Source**: `apps-kmp/src/commonMain/kotlin/com/fairair/app/`
 - **Resources**: `apps-kmp/src/commonMain/composeResources/`
 - **Theme**: `ui/theme/`
 - **Components**: `ui/components/velocity/`
@@ -40,19 +40,19 @@ Based on plan.md structure:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create VelocityColors object with BackgroundDeep, Accent, GlassBg, GlassBorder, TextMain, TextMuted in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/theme/VelocityColors.kt`
-- [ ] T005 Create VelocityTypography with Space Grotesk font family definitions (heroTitle, sentenceBuilder, magicInput, flightPath, timeBig, priceDisplay, labelSmall) in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/theme/VelocityTypography.kt`
-- [ ] T006 Create VelocityTheme composable with CompositionLocalProvider for colors, typography, and RTL direction in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/theme/VelocityTheme.kt`
-- [ ] T007 [P] Create Modifier.glassmorphism() extension for glass card styling in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/GlassMorphism.kt`
-- [ ] T008 [P] Create GlassCard composable using glassmorphism modifier in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/GlassCard.kt`
-- [ ] T009 [P] Create SearchField enum (ORIGIN, DESTINATION, DATE, PASSENGERS) in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/SearchField.kt`
-- [ ] T010 [P] Create VelocitySearchState data class with selectedOrigin, selectedDestination, departureDate, passengerCount, activeField, destinationBackground in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/VelocitySearchState.kt`
-- [ ] T011 [P] Create VelocityFlightCard data class with id, times, codes, duration, lowestPrice, fareFamilies, isExpanded in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/results/VelocityFlightCard.kt`
-- [ ] T012 [P] Create FareFamily data class and FareFamilyCode enum (FLY, FLY_PLUS, FLY_MAX) in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/results/FareFamily.kt`
-- [ ] T013 [P] Create VelocityResultsState data class with isVisible, flights, expandedFlightId, selectedFlight, selectedFare, isLoading, error in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/results/VelocityResultsState.kt`
-- [ ] T014 [P] Create DestinationTheme data class and predefined destination mappings (JED, DXB, CAI, RUH, DMM) in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/DestinationTheme.kt`
-- [ ] T015 Add Velocity UI strings to Strings.kt (English) - search sentence, fare names, button labels in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/localization/Strings.kt`
-- [ ] T016 Add Velocity UI strings to Strings.kt (Arabic) - search sentence, fare names, button labels in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/localization/Strings.kt`
+- [ ] T004 Create VelocityColors object with BackgroundDeep, Accent, GlassBg, GlassBorder, TextMain, TextMuted in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/theme/VelocityColors.kt`
+- [ ] T005 Create VelocityTypography with Space Grotesk font family definitions (heroTitle, sentenceBuilder, magicInput, flightPath, timeBig, priceDisplay, labelSmall) in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/theme/VelocityTypography.kt`
+- [ ] T006 Create VelocityTheme composable with CompositionLocalProvider for colors, typography, and RTL direction in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/theme/VelocityTheme.kt`
+- [ ] T007 [P] Create Modifier.glassmorphism() extension for glass card styling in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/GlassMorphism.kt`
+- [ ] T008 [P] Create GlassCard composable using glassmorphism modifier in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/GlassCard.kt`
+- [ ] T009 [P] Create SearchField enum (ORIGIN, DESTINATION, DATE, PASSENGERS) in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/SearchField.kt`
+- [ ] T010 [P] Create VelocitySearchState data class with selectedOrigin, selectedDestination, departureDate, passengerCount, activeField, destinationBackground in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/VelocitySearchState.kt`
+- [ ] T011 [P] Create VelocityFlightCard data class with id, times, codes, duration, lowestPrice, fareFamilies, isExpanded in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/results/VelocityFlightCard.kt`
+- [ ] T012 [P] Create FareFamily data class and FareFamilyCode enum (FLY, FLY_PLUS, FLY_MAX) in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/results/FareFamily.kt`
+- [ ] T013 [P] Create VelocityResultsState data class with isVisible, flights, expandedFlightId, selectedFlight, selectedFare, isLoading, error in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/results/VelocityResultsState.kt`
+- [ ] T014 [P] Create DestinationTheme data class and predefined destination mappings (JED, DXB, CAI, RUH, DMM) in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/DestinationTheme.kt`
+- [ ] T015 Add Velocity UI strings to Strings.kt (English) - search sentence, fare names, button labels in `apps-kmp/src/commonMain/kotlin/com/fairair/app/localization/Strings.kt`
+- [ ] T016 Add Velocity UI strings to Strings.kt (Arabic) - search sentence, fare names, button labels in `apps-kmp/src/commonMain/kotlin/com/fairair/app/localization/Strings.kt`
 
 **Checkpoint**: Foundation ready - VelocityTheme, state models, and strings available for all user stories
 
@@ -66,17 +66,17 @@ Based on plan.md structure:
 
 ### Implementation for User Story 1
 
-- [ ] T017 [P] [US1] Create SentenceBuilder composable with ClickableText and AnnotatedString for inline tappable fields in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/SentenceBuilder.kt`
-- [ ] T018 [P] [US1] Create MagicInputField composable for highlighted selectable text spans with accent underline in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/MagicInputField.kt`
-- [ ] T019 [P] [US1] Create LaunchButton composable with circular shape, glow effect (Canvas drawCircle with radial gradient), and disabled state in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/LaunchButton.kt`
-- [ ] T020 [P] [US1] Create AirportSelectionSheet composable (bottom sheet) for origin/destination selection in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/AirportSelectionSheet.kt`
-- [ ] T021 [P] [US1] Create DateSelectionSheet composable for date picker with formatted display in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/DateSelectionSheet.kt`
-- [ ] T022 [P] [US1] Create PassengerSelectionSheet composable for passenger count selection (1-9) in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/PassengerSelectionSheet.kt`
-- [ ] T023 [US1] Update SearchScreenModel to use VelocitySearchState and handle field selection events in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/SearchScreenModel.kt`
-- [ ] T024 [US1] Implement destination filtering logic in SearchScreenModel - only show valid routes from selected origin in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/SearchScreenModel.kt`
-- [ ] T025 [US1] Create VelocitySearchScreen composable with VelocityTheme wrapper, SentenceBuilder, and LaunchButton in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/VelocitySearchScreen.kt`
-- [ ] T026 [US1] Wire VelocitySearchScreen to SearchScreenModel for state and event handling in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/VelocitySearchScreen.kt`
-- [ ] T027 [US1] Update SearchScreen.kt to use VelocitySearchScreen implementation in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/SearchScreen.kt`
+- [ ] T017 [P] [US1] Create SentenceBuilder composable with ClickableText and AnnotatedString for inline tappable fields in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/SentenceBuilder.kt`
+- [ ] T018 [P] [US1] Create MagicInputField composable for highlighted selectable text spans with accent underline in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/MagicInputField.kt`
+- [ ] T019 [P] [US1] Create LaunchButton composable with circular shape, glow effect (Canvas drawCircle with radial gradient), and disabled state in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/LaunchButton.kt`
+- [ ] T020 [P] [US1] Create AirportSelectionSheet composable (bottom sheet) for origin/destination selection in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/AirportSelectionSheet.kt`
+- [ ] T021 [P] [US1] Create DateSelectionSheet composable for date picker with formatted display in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/DateSelectionSheet.kt`
+- [ ] T022 [P] [US1] Create PassengerSelectionSheet composable for passenger count selection (1-9) in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/PassengerSelectionSheet.kt`
+- [ ] T023 [US1] Update SearchScreenModel to use VelocitySearchState and handle field selection events in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/SearchScreenModel.kt`
+- [ ] T024 [US1] Implement destination filtering logic in SearchScreenModel - only show valid routes from selected origin in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/SearchScreenModel.kt`
+- [ ] T025 [US1] Create VelocitySearchScreen composable with VelocityTheme wrapper, SentenceBuilder, and LaunchButton in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/VelocitySearchScreen.kt`
+- [ ] T026 [US1] Wire VelocitySearchScreen to SearchScreenModel for state and event handling in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/VelocitySearchScreen.kt`
+- [ ] T027 [US1] Update SearchScreen.kt to use VelocitySearchScreen implementation in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/SearchScreen.kt`
 
 **Checkpoint**: User Story 1 complete - sentence builder search is fully functional with tappable fields, selection sheets, and launch button
 
@@ -90,15 +90,15 @@ Based on plan.md structure:
 
 ### Implementation for User Story 2
 
-- [ ] T028 [P] [US2] Create FlightRouteVisual composable with departure/arrival codes and animated route line with accent dot in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/FlightRouteVisual.kt`
-- [ ] T029 [P] [US2] Create VelocityFlightCardView composable using GlassCard with times, route visual, duration, and price in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/VelocityFlightCardView.kt`
-- [ ] T030 [P] [US2] Create ResultsHeader composable showing route (RUH → DXB) and formatted date with close button in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/ResultsHeader.kt`
-- [ ] T031 [US2] Create VelocityResultsOverlay composable with AnimatedVisibility (slideInVertically/slideOutVertically) in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/results/VelocityResultsOverlay.kt`
-- [ ] T032 [US2] Implement LazyVerticalGrid with GridCells.Adaptive(300.dp) for responsive flight card layout in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/results/VelocityResultsOverlay.kt`
-- [ ] T033 [US2] Create FlightDto to VelocityFlightCard mapper function in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/results/FlightMapper.kt`
-- [ ] T034 [US2] Update ResultsScreenModel to use VelocityResultsState and handle overlay visibility in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/results/ResultsScreenModel.kt`
-- [ ] T035 [US2] Wire VelocityResultsOverlay to ResultsScreenModel for state and events in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/results/VelocityResultsOverlay.kt`
-- [ ] T036 [US2] Integrate VelocityResultsOverlay into VelocitySearchScreen as overlay layer in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/VelocitySearchScreen.kt`
+- [ ] T028 [P] [US2] Create FlightRouteVisual composable with departure/arrival codes and animated route line with accent dot in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/FlightRouteVisual.kt`
+- [ ] T029 [P] [US2] Create VelocityFlightCardView composable using GlassCard with times, route visual, duration, and price in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/VelocityFlightCardView.kt`
+- [ ] T030 [P] [US2] Create ResultsHeader composable showing route (RUH → DXB) and formatted date with close button in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/ResultsHeader.kt`
+- [ ] T031 [US2] Create VelocityResultsOverlay composable with AnimatedVisibility (slideInVertically/slideOutVertically) in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/results/VelocityResultsOverlay.kt`
+- [ ] T032 [US2] Implement LazyVerticalGrid with GridCells.Adaptive(300.dp) for responsive flight card layout in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/results/VelocityResultsOverlay.kt`
+- [ ] T033 [US2] Create FlightDto to VelocityFlightCard mapper function in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/results/FlightMapper.kt`
+- [ ] T034 [US2] Update ResultsScreenModel to use VelocityResultsState and handle overlay visibility in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/results/ResultsScreenModel.kt`
+- [ ] T035 [US2] Wire VelocityResultsOverlay to ResultsScreenModel for state and events in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/results/VelocityResultsOverlay.kt`
+- [ ] T036 [US2] Integrate VelocityResultsOverlay into VelocitySearchScreen as overlay layer in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/VelocitySearchScreen.kt`
 
 **Checkpoint**: User Stories 1 AND 2 complete - full search and results flow working with glassmorphic cards
 
@@ -112,12 +112,12 @@ Based on plan.md structure:
 
 ### Implementation for User Story 3
 
-- [ ] T037 [P] [US3] Create FareTile composable showing fare name and price with accent highlight on selection in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/FareTile.kt`
-- [ ] T038 [P] [US3] Create FareGrid composable with 3-column Row layout for Fly, Fly+, FlyMax tiles in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/FareGrid.kt`
-- [ ] T039 [US3] Add animateContentSize modifier to VelocityFlightCardView for smooth expand/collapse in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/VelocityFlightCardView.kt`
-- [ ] T040 [US3] Integrate FareGrid into VelocityFlightCardView, shown when isExpanded is true in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/VelocityFlightCardView.kt`
-- [ ] T041 [US3] Add card expansion logic to ResultsScreenModel - only one card expanded at a time in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/results/ResultsScreenModel.kt`
-- [ ] T042 [US3] Add fare selection handling to ResultsScreenModel in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/results/ResultsScreenModel.kt`
+- [ ] T037 [P] [US3] Create FareTile composable showing fare name and price with accent highlight on selection in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/FareTile.kt`
+- [ ] T038 [P] [US3] Create FareGrid composable with 3-column Row layout for Fly, Fly+, FlyMax tiles in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/FareGrid.kt`
+- [ ] T039 [US3] Add animateContentSize modifier to VelocityFlightCardView for smooth expand/collapse in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/VelocityFlightCardView.kt`
+- [ ] T040 [US3] Integrate FareGrid into VelocityFlightCardView, shown when isExpanded is true in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/VelocityFlightCardView.kt`
+- [ ] T041 [US3] Add card expansion logic to ResultsScreenModel - only one card expanded at a time in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/results/ResultsScreenModel.kt`
+- [ ] T042 [US3] Add fare selection handling to ResultsScreenModel in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/results/ResultsScreenModel.kt`
 
 **Checkpoint**: User Stories 1, 2, AND 3 complete - search, results, and fare selection all working
 
@@ -131,11 +131,11 @@ Based on plan.md structure:
 
 ### Implementation for User Story 4
 
-- [ ] T043 [P] [US4] Create DestinationBackground composable with AsyncImage/painterResource and crossfade animation in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/DestinationBackground.kt`
-- [ ] T044 [P] [US4] Add graphicsLayer modifier to DestinationBackground for 40% brightness reduction in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/DestinationBackground.kt`
-- [ ] T045 [US4] Add AnimatedVisibility wrapper with fadeIn/fadeOut for background transitions in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/DestinationBackground.kt`
-- [ ] T046 [US4] Add destinationBackground state updates to SearchScreenModel when destination changes in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/SearchScreenModel.kt`
-- [ ] T047 [US4] Integrate DestinationBackground into VelocitySearchScreen as bottom layer in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/VelocitySearchScreen.kt`
+- [ ] T043 [P] [US4] Create DestinationBackground composable with AsyncImage/painterResource and crossfade animation in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/DestinationBackground.kt`
+- [ ] T044 [P] [US4] Add graphicsLayer modifier to DestinationBackground for 40% brightness reduction in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/DestinationBackground.kt`
+- [ ] T045 [US4] Add AnimatedVisibility wrapper with fadeIn/fadeOut for background transitions in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/DestinationBackground.kt`
+- [ ] T046 [US4] Add destinationBackground state updates to SearchScreenModel when destination changes in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/SearchScreenModel.kt`
+- [ ] T047 [US4] Integrate DestinationBackground into VelocitySearchScreen as bottom layer in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/VelocitySearchScreen.kt`
 
 **Checkpoint**: User Stories 1-4 complete - full visual experience with dynamic backgrounds
 
@@ -149,13 +149,13 @@ Based on plan.md structure:
 
 ### Implementation for User Story 5
 
-- [ ] T048 [P] [US5] Create ArabicTypography with Noto Kufi Arabic font family definitions matching English weights in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/theme/VelocityTypography.kt`
-- [ ] T049 [P] [US5] Create LanguageToggle composable button for EN/AR switching in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/LanguageToggle.kt`
-- [ ] T050 [US5] Update VelocityTheme to accept isRtl parameter and provide LocalLayoutDirection accordingly in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/theme/VelocityTheme.kt`
-- [ ] T051 [US5] Update VelocityTheme to switch between SpaceGrotesk and NotoKufiArabic based on language in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/theme/VelocityTheme.kt`
-- [ ] T052 [US5] Integrate LanguageToggle into VelocitySearchScreen header area in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/VelocitySearchScreen.kt`
-- [ ] T053 [US5] Wire language toggle to LocalizationManager for state persistence in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/search/VelocitySearchScreen.kt`
-- [ ] T054 [US5] Verify all SentenceBuilder text uses localized strings from Strings.kt in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/SentenceBuilder.kt`
+- [ ] T048 [P] [US5] Create ArabicTypography with Noto Kufi Arabic font family definitions matching English weights in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/theme/VelocityTypography.kt`
+- [ ] T049 [P] [US5] Create LanguageToggle composable button for EN/AR switching in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/LanguageToggle.kt`
+- [ ] T050 [US5] Update VelocityTheme to accept isRtl parameter and provide LocalLayoutDirection accordingly in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/theme/VelocityTheme.kt`
+- [ ] T051 [US5] Update VelocityTheme to switch between SpaceGrotesk and NotoKufiArabic based on language in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/theme/VelocityTheme.kt`
+- [ ] T052 [US5] Integrate LanguageToggle into VelocitySearchScreen header area in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/VelocitySearchScreen.kt`
+- [ ] T053 [US5] Wire language toggle to LocalizationManager for state persistence in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/search/VelocitySearchScreen.kt`
+- [ ] T054 [US5] Verify all SentenceBuilder text uses localized strings from Strings.kt in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/SentenceBuilder.kt`
 
 **Checkpoint**: All user stories complete - full Velocity UI with RTL support
 
@@ -165,11 +165,11 @@ Based on plan.md structure:
 
 **Purpose**: Error handling, edge cases, and final refinements
 
-- [ ] T055 [P] Create EmptyResultsState composable for no flights available message in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/EmptyResultsState.kt`
-- [ ] T056 [P] Create ErrorResultsState composable with retry button for network failures in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/ErrorResultsState.kt`
-- [ ] T057 [P] Create LoadingResultsState composable with accent-colored progress indicator in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/LoadingResultsState.kt`
-- [ ] T058 Integrate EmptyResultsState, ErrorResultsState, LoadingResultsState into VelocityResultsOverlay in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/screens/results/VelocityResultsOverlay.kt`
-- [ ] T059 Add fallback gradient background when destination images fail to load in `apps-kmp/src/commonMain/kotlin/com/flyadeal/app/ui/components/velocity/DestinationBackground.kt`
+- [ ] T055 [P] Create EmptyResultsState composable for no flights available message in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/EmptyResultsState.kt`
+- [ ] T056 [P] Create ErrorResultsState composable with retry button for network failures in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/ErrorResultsState.kt`
+- [ ] T057 [P] Create LoadingResultsState composable with accent-colored progress indicator in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/LoadingResultsState.kt`
+- [ ] T058 Integrate EmptyResultsState, ErrorResultsState, LoadingResultsState into VelocityResultsOverlay in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/screens/results/VelocityResultsOverlay.kt`
+- [ ] T059 Add fallback gradient background when destination images fail to load in `apps-kmp/src/commonMain/kotlin/com/fairair/app/ui/components/velocity/DestinationBackground.kt`
 - [ ] T060 Verify 60fps animations using Android Studio profiler
 - [ ] T061 Test on Android, iOS simulator, and Web (Wasm) per quickstart.md checklist
 - [ ] T062 Visual comparison with design.html to verify 95%+ fidelity

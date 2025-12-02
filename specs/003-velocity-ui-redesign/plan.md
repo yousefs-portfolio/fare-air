@@ -5,7 +5,7 @@
 
 ## Summary
 
-Transform the flyadeal mobile/web app UI from traditional Material Design forms to the "Velocity Experience" - a modern, immersive interface featuring:
+Transform the fairair mobile/web app UI from traditional Material Design forms to the "Velocity Experience" - a modern, immersive interface featuring:
 
 - **Natural language sentence builder** for flight search ("I want to fly from [Riyadh] to [Dubai]...")
 - **Glassmorphism design** with deep purple backgrounds and neon lime accents
@@ -72,10 +72,10 @@ apps-kmp/
 │   │   │   └── drawable/                # NEW: Destination backgrounds
 │   │   │       └── bg_*.webp
 │   │   │
-│   │   └── kotlin/com/flyadeal/app/
+│   │   └── kotlin/com/fairair/app/
 │   │       ├── ui/
 │   │       │   ├── theme/
-│   │       │   │   ├── FlyadealTheme.kt     # EXISTING (preserve)
+│   │       │   │   ├── FairairTheme.kt     # EXISTING (preserve)
 │   │       │   │   └── VelocityTheme.kt     # NEW: Velocity design system
 │   │       │   │
 │   │       │   ├── components/

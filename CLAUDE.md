@@ -37,7 +37,7 @@ Favor verbosity and correctness over brevity. Do not prioritize saving tokens. I
 
 ## Project Overview
 
-This is "Project Shadow" - a Kotlin Multiplatform airline booking platform for flyadeal. The architecture consists of:
+This is "Project Shadow" - a Kotlin Multiplatform airline booking platform for fairair. The architecture consists of:
 
 - **:shared-contract** - Pure Kotlin multiplatform module containing DTOs, API routes, and models (no platform-specific dependencies)
 - **:backend-spring** - Spring Boot WebFlux backend serving as a BFF (Backend for Frontend)
@@ -78,7 +78,7 @@ This is "Project Shadow" - a Kotlin Multiplatform airline booking platform for f
 ./gradlew test
 
 # Run single test class
-./gradlew :module-name:test --tests "com.flyadeal.ClassName"
+./gradlew :module-name:test --tests "com.fairair.ClassName"
 ```
 
 ## Architecture Guidelines
@@ -92,7 +92,7 @@ This is "Project Shadow" - a Kotlin Multiplatform airline booking platform for f
 4. **Backend Layering:**
    - Controllers -> Services -> Clients
    - `NavitaireClient` interface with `MockNavitaireClient` and `RealNavitaireClient` implementations
-   - Toggle via `flyadeal.provider` config property
+   - Toggle via `fairair.provider` config property
 
 5. **Caching Strategy:**
    - Routes/Stations: 24-hour TTL
