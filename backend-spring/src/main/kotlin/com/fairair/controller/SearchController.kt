@@ -114,10 +114,21 @@ data class FlightDto(
     val durationMinutes: Int,
     val durationFormatted: String,
     val aircraft: String,
-    val fareFamilies: List<FareFamilyDto>
+    val fareFamilies: List<FareFamilyDto>,
+    val seatsAvailable: Int = 0,
+    val seatsBooked: Int = 0
 ) {
     companion object {
         fun from(flight: Flight): FlightDto {
+            // Generate random seat availability for demo
+            val totalSeats = when {
+                flight.aircraft.contains("A320") -> 180
+                flight.aircraft.contains("A321") -> 220
+                flight.aircraft.contains("737") -> 160
+                else -> 150
+            }
+            val booked = (totalSeats * (0.4 + Math.random() * 0.5)).toInt()
+            
             return FlightDto(
                 flightNumber = flight.flightNumber,
                 origin = flight.origin.value,
@@ -127,7 +138,9 @@ data class FlightDto(
                 durationMinutes = flight.durationMinutes,
                 durationFormatted = flight.formatDuration(),
                 aircraft = flight.aircraft,
-                fareFamilies = flight.fareFamilies.map { FareFamilyDto.from(it) }
+                fareFamilies = flight.fareFamilies.map { FareFamilyDto.from(it) },
+                seatsAvailable = totalSeats - booked,
+                seatsBooked = booked
             )
         }
     }

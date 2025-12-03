@@ -33,6 +33,11 @@ class MockNavitaireClient(
      * In-memory store for created bookings (keyed by PNR).
      */
     private val bookingStore = ConcurrentHashMap<String, BookingConfirmation>()
+    
+    /**
+     * Maps user IDs to their booking PNRs.
+     */
+    private val userBookings = ConcurrentHashMap<String, MutableList<String>>()
 
     /**
      * Simulates network delay based on configuration.
@@ -126,9 +131,9 @@ class MockNavitaireClient(
         )
     }
 
-    override suspend fun createBooking(request: BookingRequest): BookingConfirmation {
+    override suspend fun createBooking(request: BookingRequest, userId: String?): BookingConfirmation {
         simulateDelay()
-        log.info("Creating booking for flight ${request.flightNumber} with ${request.passengers.size} passengers")
+        log.info("Creating booking for flight ${request.flightNumber} with ${request.passengers.size} passengers, userId=$userId")
 
         val pnr = PnrCode.generate()
         val now = Clock.System.now()
@@ -154,6 +159,13 @@ class MockNavitaireClient(
         )
 
         bookingStore[pnr.value] = confirmation
+        
+        // Associate booking with user if logged in
+        if (userId != null) {
+            userBookings.getOrPut(userId) { mutableListOf() }.add(pnr.value)
+            log.info("Booking ${pnr.value} associated with user $userId")
+        }
+        
         log.info("Booking created with PNR=${pnr.value}")
 
         return confirmation
@@ -163,6 +175,13 @@ class MockNavitaireClient(
         simulateDelay()
         log.info("Retrieving booking for PNR=$pnr")
         return bookingStore[pnr]
+    }
+    
+    override suspend fun getBookingsByUser(userId: String): List<BookingConfirmation> {
+        simulateDelay()
+        log.info("Retrieving bookings for user=$userId")
+        val pnrs = userBookings[userId] ?: return emptyList()
+        return pnrs.mapNotNull { bookingStore[it] }
     }
 
     /**

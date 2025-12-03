@@ -22,12 +22,17 @@ import com.fairair.app.ui.theme.VelocityTheme
  * - Animated route visualization
  * - Expandable to show fare options
  * - Price display with accent color
+ * - Employee mode with standby fare option
  *
  * @param flight The flight data to display
  * @param isExpanded Whether the card is expanded to show fare options
  * @param selectedFare The currently selected fare family, if any
+ * @param isEmployee Whether user is an employee (shows standby option)
+ * @param seatsAvailable Number of available seats on this flight
+ * @param seatsBooked Number of booked seats on this flight
  * @param onClick Callback when the card is tapped
  * @param onFareSelect Callback when a fare is selected
+ * @param onStandbySelect Callback when standby fare is selected
  * @param modifier Modifier to apply to the component
  */
 @Composable
@@ -35,8 +40,12 @@ fun VelocityFlightCardView(
     flight: VelocityFlightCard,
     isExpanded: Boolean = false,
     selectedFare: FareFamily? = null,
+    isEmployee: Boolean = false,
+    seatsAvailable: Int = 0,
+    seatsBooked: Int = 0,
     onClick: () -> Unit,
     onFareSelect: (FareFamily) -> Unit = {},
+    onStandbySelect: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val typography = VelocityTheme.typography
@@ -95,6 +104,28 @@ fun VelocityFlightCardView(
                     )
                 }
             }
+            
+            // Employee seat availability info
+            if (isEmployee && isExpanded) {
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "🪑 $seatsAvailable available",
+                        style = typography.labelSmall,
+                        color = if (seatsAvailable > 10) VelocityColors.Success else VelocityColors.Warning
+                    )
+                    Text(
+                        text = "📊 $seatsBooked booked",
+                        style = typography.labelSmall,
+                        color = VelocityColors.TextMuted
+                    )
+                }
+            }
 
             // Expandable fare selection
             if (isExpanded && flight.fareFamilies.isNotEmpty()) {
@@ -103,7 +134,9 @@ fun VelocityFlightCardView(
                 FareGrid(
                     fareFamilies = flight.fareFamilies,
                     selectedFare = selectedFare,
-                    onFareSelect = onFareSelect
+                    onFareSelect = onFareSelect,
+                    isEmployee = isEmployee,
+                    onStandbySelect = onStandbySelect
                 )
             }
         }

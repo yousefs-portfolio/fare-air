@@ -121,6 +121,28 @@ class WasmBookingViewModel(
     }
 
     /**
+     * Select standby fare for employees - fixed SAR 100 price.
+     */
+    fun selectStandbyFare(flight: FlightDto): Boolean {
+        bookingFlowState.setSelectedFlight(
+            SelectedFlight(
+                flight = flight,
+                fareFamily = "STANDBY",
+                totalPrice = "SAR 100"
+            )
+        )
+
+        _resultsState.update {
+            it.copy(
+                selectedFlightNumber = flight.flightNumber,
+                selectedFareFamily = "STANDBY"
+            )
+        }
+
+        return true
+    }
+
+    /**
      * Initialize passenger forms based on search criteria.
      */
     fun initializePassengerForms() {
@@ -330,8 +352,9 @@ class WasmBookingViewModel(
 
     /**
      * Process payment and create booking.
+     * @param authToken Optional JWT token for authenticated users
      */
-    fun processPayment(onSuccess: () -> Unit) {
+    fun processPayment(authToken: String?, onSuccess: () -> Unit) {
         val state = _paymentState.value
         val selectedFlight = bookingFlowState.selectedFlight ?: return
         val passengers = bookingFlowState.passengerInfo
@@ -386,7 +409,8 @@ class WasmBookingViewModel(
                 )
             )
 
-            when (val result = apiClient.createBooking(request)) {
+            // Use authenticated endpoint if token is present
+            when (val result = apiClient.createBookingAuthenticated(request, authToken)) {
                 is ApiResult.Success -> {
                     bookingFlowState.setBookingConfirmation(result.data)
                     _paymentState.update { it.copy(isProcessing = false) }

@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.fairair.app.api.FlightDto
 import com.fairair.app.localization.AppStrings
 import com.fairair.app.ui.components.velocity.*
 import com.fairair.app.ui.theme.VelocityColors
@@ -30,13 +31,17 @@ import com.fairair.app.ui.theme.VelocityTheme
  * - Responsive grid layout for flight cards
  * - Header with route info and close button
  * - Loading, empty, and error states
+ * - Employee mode with standby fare option
  *
  * @param state Current results state
  * @param originCode Origin airport code for display
  * @param destinationCode Destination airport code for display
  * @param formattedDate Formatted departure date for display
+ * @param isEmployee Whether user is logged in as employee (shows standby option)
+ * @param flights Raw flight DTOs with seat availability
  * @param onFlightClick Callback when a flight card is tapped
  * @param onFareSelect Callback when a fare is selected
+ * @param onStandbySelect Callback when standby fare is selected (employee only)
  * @param onClose Callback to close the overlay
  * @param onRetry Callback to retry on error
  * @param strings Localized strings
@@ -48,8 +53,11 @@ fun VelocityResultsOverlay(
     originCode: String,
     destinationCode: String,
     formattedDate: String,
+    isEmployee: Boolean = false,
+    flights: List<FlightDto> = emptyList(),
     onFlightClick: (VelocityFlightCard) -> Unit,
     onFareSelect: (FareFamily) -> Unit,
+    onStandbySelect: (FlightDto) -> Unit = {},
     onClose: () -> Unit,
     onRetry: () -> Unit,
     strings: AppStrings,
@@ -113,10 +121,13 @@ fun VelocityResultsOverlay(
                     else -> {
                         ResultsFlightGrid(
                             flights = state.flights,
+                            flightDtos = flights,
                             expandedFlightId = state.expandedFlightId,
                             selectedFare = state.selectedFare,
+                            isEmployee = isEmployee,
                             onFlightClick = onFlightClick,
-                            onFareSelect = onFareSelect
+                            onFareSelect = onFareSelect,
+                            onStandbySelect = onStandbySelect
                         )
                     }
                 }
@@ -131,10 +142,13 @@ fun VelocityResultsOverlay(
 @Composable
 private fun ResultsFlightGrid(
     flights: List<VelocityFlightCard>,
+    flightDtos: List<FlightDto>,
     expandedFlightId: String?,
     selectedFare: FareFamily?,
+    isEmployee: Boolean,
     onFlightClick: (VelocityFlightCard) -> Unit,
     onFareSelect: (FareFamily) -> Unit,
+    onStandbySelect: (FlightDto) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
@@ -150,12 +164,19 @@ private fun ResultsFlightGrid(
             items = flights,
             key = { it.id }
         ) { flight ->
+            val flightDto = flightDtos.find { it.flightNumber == flight.id }
             VelocityFlightCardView(
                 flight = flight,
                 isExpanded = flight.id == expandedFlightId,
                 selectedFare = if (flight.id == expandedFlightId) selectedFare else null,
+                isEmployee = isEmployee,
+                seatsAvailable = flightDto?.seatsAvailable ?: 0,
+                seatsBooked = flightDto?.seatsBooked ?: 0,
                 onClick = { onFlightClick(flight) },
-                onFareSelect = onFareSelect
+                onFareSelect = onFareSelect,
+                onStandbySelect = { 
+                    flightDto?.let { onStandbySelect(it) }
+                }
             )
         }
     }

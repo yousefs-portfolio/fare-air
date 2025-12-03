@@ -21,11 +21,14 @@ import com.fairair.app.ui.theme.VelocityTheme
  * Grid layout showing available fare families for a flight.
  *
  * Displays Fly, Fly+, and FlyMax options with prices.
+ * For employees, also shows a Standby option at SAR 100.
  * Selected fare is highlighted with accent border.
  *
  * @param fareFamilies List of available fare options
  * @param selectedFare Currently selected fare, if any
  * @param onFareSelect Callback when a fare is selected
+ * @param isEmployee Whether to show employee standby option
+ * @param onStandbySelect Callback when standby is selected
  * @param modifier Modifier to apply to the component
  */
 @Composable
@@ -33,18 +36,90 @@ fun FareGrid(
     fareFamilies: List<FareFamily>,
     selectedFare: FareFamily?,
     onFareSelect: (FareFamily) -> Unit,
+    isEmployee: Boolean = false,
+    onStandbySelect: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        fareFamilies.forEach { fare ->
-            FareTile(
-                fare = fare,
-                isSelected = selectedFare?.id == fare.id,
-                onClick = { onFareSelect(fare) },
-                modifier = Modifier.weight(1f)
+        // Regular fare options
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            fareFamilies.forEach { fare ->
+                FareTile(
+                    fare = fare,
+                    isSelected = selectedFare?.id == fare.id,
+                    onClick = { onFareSelect(fare) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        
+        // Employee standby option
+        if (isEmployee) {
+            StandbyTile(
+                onClick = onStandbySelect,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+/**
+ * Standby fare tile for employees only.
+ * Fixed price of SAR 100.
+ */
+@Composable
+fun StandbyTile(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val typography = VelocityTheme.typography
+    val shape = RoundedCornerShape(12.dp)
+
+    Row(
+        modifier = modifier
+            .clip(shape)
+            .border(
+                width = 2.dp,
+                color = VelocityColors.Warning,
+                shape = shape
+            )
+            .background(VelocityColors.Warning.copy(alpha = 0.15f))
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "✈️ Employee Standby",
+                style = typography.body,
+                color = VelocityColors.Warning
+            )
+            Text(
+                text = "Subject to availability at gate",
+                style = typography.labelSmall,
+                color = VelocityColors.TextMuted
+            )
+        }
+        
+        Column(
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                text = "SAR 100",
+                style = typography.priceDisplay,
+                color = VelocityColors.Warning
+            )
+            Text(
+                text = "Fixed rate",
+                style = typography.labelSmall,
+                color = VelocityColors.TextMuted
             )
         }
     }

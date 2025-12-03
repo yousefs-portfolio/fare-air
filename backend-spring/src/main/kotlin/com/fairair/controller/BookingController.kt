@@ -4,10 +4,12 @@ import com.fairair.contract.api.ApiRoutes
 import com.fairair.contract.model.*
 import com.fairair.exception.*
 import com.fairair.service.BookingService
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.datetime.LocalDate
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -24,17 +26,21 @@ class BookingController(
      * POST /api/v1/booking
      *
      * Creates a new booking for the selected flight and passengers.
+     * If user is authenticated, the booking is associated with their account.
      *
      * @param request Booking details including passengers and payment
      * @return BookingConfirmation with PNR and booking details
      */
     @PostMapping
-    suspend fun createBooking(@RequestBody request: BookingRequestDto): ResponseEntity<Any> {
-        log.info("POST /booking: flight=${request.flightNumber}, passengers=${request.passengers.size}")
+    suspend fun createBooking(
+        @RequestBody request: BookingRequestDto
+    ): ResponseEntity<Any> {
+        val userId = getCurrentUserId()
+        log.info("POST /booking: flight=${request.flightNumber}, passengers=${request.passengers.size}, userId=$userId")
 
         return try {
             val bookingRequest = request.toModel()
-            val confirmation = bookingService.createBooking(bookingRequest)
+            val confirmation = bookingService.createBooking(bookingRequest, userId)
             ResponseEntity.status(HttpStatus.CREATED)
                 .body(BookingConfirmationDto.from(confirmation))
         } catch (e: SearchExpiredException) {
@@ -86,6 +92,43 @@ class BookingController(
         } else {
             ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(BookingErrorResponse("NOT_FOUND", "Booking not found for PNR: $pnr"))
+        }
+    }
+    
+    /**
+     * GET /api/v1/booking/user/me
+     *
+     * Retrieves all bookings for the authenticated user.
+     *
+     * @return List of bookings for this user
+     */
+    @GetMapping("/user/me")
+    suspend fun getMyBookings(): ResponseEntity<Any> {
+        val userId = getCurrentUserId()
+        log.info("GET /booking/user/me: userId=$userId")
+        
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(BookingErrorResponse("UNAUTHORIZED", "Authentication required"))
+        }
+
+        val bookings = bookingService.getBookingsByUser(userId)
+        return ResponseEntity.ok(bookings.map { BookingConfirmationDto.from(it) })
+    }
+    
+    /**
+     * Helper function to extract user ID from the reactive security context.
+     * Returns null if not authenticated.
+     */
+    private suspend fun getCurrentUserId(): String? {
+        return try {
+            val authentication = ReactiveSecurityContextHolder.getContext()
+                .map { it.authentication }
+                .awaitSingleOrNull()
+            authentication?.principal as? String
+        } catch (e: Exception) {
+            log.debug("Could not get current user: ${e.message}")
+            null
         }
     }
 }

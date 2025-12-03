@@ -139,6 +139,37 @@ class FairairApiClient(
     }
 
     /**
+     * Retrieves all bookings for the authenticated user.
+     * @param authToken The JWT access token
+     * @return List of BookingConfirmationDto or error if not authenticated
+     */
+    suspend fun getMyBookings(authToken: String): ApiResult<List<BookingConfirmationDto>> {
+        return safeApiCall {
+            httpClient.get("$baseUrl/api/v1/booking/user/me") {
+                header(HttpHeaders.Authorization, "Bearer $authToken")
+            }.body()
+        }
+    }
+    
+    /**
+     * Creates a booking with optional authentication.
+     * @param request Booking details
+     * @param authToken Optional JWT access token for logged-in users
+     * @return BookingConfirmationDto on success
+     */
+    suspend fun createBookingAuthenticated(request: BookingRequestDto, authToken: String?): ApiResult<BookingConfirmationDto> {
+        return safeApiCall {
+            httpClient.post("$baseUrl${ApiRoutes.Booking.CREATE}") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+                if (authToken != null) {
+                    header(HttpHeaders.Authorization, "Bearer $authToken")
+                }
+            }.body()
+        }
+    }
+
+    /**
      * Wraps API calls with error handling and automatic retry for transient failures.
      * Uses exponential backoff with jitter for retries.
      *
@@ -431,7 +462,9 @@ data class FlightDto(
     val durationMinutes: Int = 0,
     val durationFormatted: String = "",
     val aircraft: String = "",
-    val fareFamilies: List<FareFamilyDto> = emptyList()
+    val fareFamilies: List<FareFamilyDto> = emptyList(),
+    val seatsAvailable: Int = 0,
+    val seatsBooked: Int = 0
 ) {
     /** Convenience property for display */
     val duration: String get() = durationFormatted.ifEmpty { "${durationMinutes}m" }

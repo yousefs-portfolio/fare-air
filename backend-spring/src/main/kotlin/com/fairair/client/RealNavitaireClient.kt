@@ -66,7 +66,7 @@ class RealNavitaireClient(
         }
     }
 
-    override suspend fun createBooking(request: BookingRequest): BookingConfirmation {
+    override suspend fun createBooking(request: BookingRequest, userId: String?): BookingConfirmation {
         return withApiTimeout("createBooking") {
             log.warn("RealNavitaireClient.createBooking() called but not implemented")
             throw NotImplementedError("Real Navitaire client is not yet implemented. Set fairair.provider=mock to use mock data.")
@@ -76,6 +76,13 @@ class RealNavitaireClient(
     override suspend fun getBooking(pnr: String): BookingConfirmation? {
         return withApiTimeout("getBooking") {
             log.warn("RealNavitaireClient.getBooking() called but not implemented")
+            throw NotImplementedError("Real Navitaire client is not yet implemented. Set fairair.provider=mock to use mock data.")
+        }
+    }
+    
+    override suspend fun getBookingsByUser(userId: String): List<BookingConfirmation> {
+        return withApiTimeout("getBookingsByUser") {
+            log.warn("RealNavitaireClient.getBookingsByUser() called but not implemented")
             throw NotImplementedError("Real Navitaire client is not yet implemented. Set fairair.provider=mock to use mock data.")
         }
     }

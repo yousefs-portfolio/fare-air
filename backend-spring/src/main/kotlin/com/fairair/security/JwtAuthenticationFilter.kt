@@ -47,8 +47,21 @@ class JwtAuthenticationFilter(
          * Path prefixes that don't require authentication
          */
         private val PUBLIC_PATH_PREFIXES = setOf(
-            "/actuator/",
-            "/api/v1/booking/"
+            "/actuator/"
+        )
+        
+        /**
+         * Paths that are public but can have optional authentication
+         */
+        private val OPTIONAL_AUTH_PATHS = setOf(
+            "/api/v1/booking"
+        )
+        
+        /**
+         * Path prefixes that require authentication
+         */
+        private val PROTECTED_PATH_PREFIXES = setOf(
+            "/api/v1/booking/user"
         )
     }
 
@@ -57,6 +70,10 @@ class JwtAuthenticationFilter(
         
         // Skip authentication for public paths
         if (isPublicPath(path)) {
+            // For optional auth paths, still try to parse token if present
+            if (isOptionalAuthPath(path)) {
+                return tryOptionalAuth(exchange, chain)
+            }
             return chain.filter(exchange)
         }
 
@@ -96,12 +113,65 @@ class JwtAuthenticationFilter(
             }
         }
     }
+    
+    /**
+     * Try to authenticate if a token is present, but don't fail if not.
+     */
+    private fun tryOptionalAuth(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
+        val authHeader = exchange.request.headers.getFirst(HttpHeaders.AUTHORIZATION)
+        
+        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            // No token provided - continue without auth
+            return chain.filter(exchange)
+        }
+        
+        val token = authHeader.substring(BEARER_PREFIX.length)
+        
+        return when (val result = jwtTokenProvider.validateToken(token)) {
+            is TokenValidationResult.Valid -> {
+                if (result.tokenType == "access") {
+                    log.debug("Optional auth - authenticated user: ${result.userId}")
+                    
+                    val authorities = listOf(SimpleGrantedAuthority("ROLE_USER"))
+                    val authentication = UsernamePasswordAuthenticationToken(
+                        result.userId,
+                        null,
+                        authorities
+                    )
+                    
+                    chain.filter(exchange)
+                        .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication))
+                } else {
+                    // Wrong token type - continue without auth
+                    chain.filter(exchange)
+                }
+            }
+            else -> {
+                // Invalid or expired token on optional path - continue without auth
+                log.debug("Optional auth - token invalid or expired, continuing without auth")
+                chain.filter(exchange)
+            }
+        }
+    }
 
     private fun isPublicPath(path: String): Boolean {
+        // Check if path requires authentication first
+        if (PROTECTED_PATH_PREFIXES.any { path.startsWith(it) }) {
+            return false
+        }
+        
         if (PUBLIC_PATHS.contains(path)) {
             return true
         }
         return PUBLIC_PATH_PREFIXES.any { path.startsWith(it) }
+    }
+    
+    private fun isOptionalAuthPath(path: String): Boolean {
+        // Booking retrieval by PNR is public
+        if (path.startsWith("/api/v1/booking/") && !path.startsWith("/api/v1/booking/user")) {
+            return true
+        }
+        return OPTIONAL_AUTH_PATHS.contains(path)
     }
 
     private fun handleUnauthorized(exchange: ServerWebExchange, message: String): Mono<Void> {

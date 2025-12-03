@@ -22,14 +22,15 @@ class BookingService(
     /**
      * Creates a new booking after validating the selection and passenger data.
      * @param request The booking request with all required details
+     * @param userId Optional user ID to associate the booking with
      * @return BookingConfirmation with PNR and booking details
      * @throws SearchExpiredException if the search session has expired
      * @throws FlightNotFoundException if the selected flight is not found
      * @throws FareNotFoundException if the selected fare is not available
      * @throws PassengerValidationException if passenger data is invalid
      */
-    suspend fun createBooking(request: BookingRequest): BookingConfirmation {
-        log.info("Creating booking for search=${request.searchId}, flight=${request.flightNumber}")
+    suspend fun createBooking(request: BookingRequest, userId: String? = null): BookingConfirmation {
+        log.info("Creating booking for search=${request.searchId}, flight=${request.flightNumber}, userId=$userId")
 
         val selectedFare = flightService.validateSelection(
             searchId = request.searchId,
@@ -41,10 +42,20 @@ class BookingService(
         validateAncillaries(request.ancillaries, request.passengers.size, request.fareFamily)
         validatePaymentAmount(request, selectedFare)
 
-        val confirmation = navitaireClient.createBooking(request)
+        val confirmation = navitaireClient.createBooking(request, userId)
         log.info("Booking created successfully: PNR=${confirmation.pnr.value}")
 
         return confirmation
+    }
+    
+    /**
+     * Retrieves all bookings for a user.
+     * @param userId The user's ID
+     * @return List of bookings for this user
+     */
+    suspend fun getBookingsByUser(userId: String): List<BookingConfirmation> {
+        log.info("Retrieving bookings for user=$userId")
+        return navitaireClient.getBookingsByUser(userId)
     }
 
     /**

@@ -29,6 +29,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fairair.app.api.FairairApiClient
+import com.fairair.app.api.FlightDto
+import com.fairair.app.api.UserInfoDto
 import com.fairair.app.localization.AppLanguage
 import com.fairair.app.localization.LocalizationProvider
 import com.fairair.app.localization.LocalizationState
@@ -93,6 +95,12 @@ private fun WasmAppContent() {
 
     // Navigation state
     var currentScreen by remember { mutableStateOf(WasmScreen.LANDING) }
+    var previousScreen by remember { mutableStateOf(WasmScreen.LANDING) }
+    
+    // User state - tracks logged in user and auth token
+    var currentUser by remember { mutableStateOf<UserInfoDto?>(null) }
+    var authToken by remember { mutableStateOf<String?>(null) }
+    val isEmployee = currentUser?.role == "EMPLOYEE"
 
     // ViewModels - created once and reused
     val searchViewModel = remember {
@@ -110,7 +118,10 @@ private fun WasmAppContent() {
                     LandingScreen(
                         onFlyNowClick = { currentScreen = WasmScreen.SEARCH },
                         onLoginClick = { currentScreen = WasmScreen.LOGIN },
-                        onSettingsClick = { currentScreen = WasmScreen.SETTINGS },
+                        onSettingsClick = {
+                            previousScreen = WasmScreen.LANDING
+                            currentScreen = WasmScreen.SETTINGS
+                        },
                         onDealClick = { origin, destination ->
                             searchViewModel.preselectRoute(origin, destination)
                             currentScreen = WasmScreen.SEARCH
@@ -124,7 +135,11 @@ private fun WasmAppContent() {
                 }
                 WasmScreen.LOGIN -> {
                     WasmLoginScreen(
-                    onLogin = { currentScreen = WasmScreen.SEARCH },
+                    onLogin = { user, token -> 
+                        currentUser = user
+                        authToken = token
+                        currentScreen = WasmScreen.SEARCH 
+                    },
                     onBack = { currentScreen = WasmScreen.LANDING }
                 )
             }
@@ -137,7 +152,10 @@ private fun WasmAppContent() {
                         bookingViewModel.initializeResults()
                         currentScreen = WasmScreen.RESULTS
                     },
-                    onNavigateToSettings = { currentScreen = WasmScreen.SETTINGS },
+                    onNavigateToSettings = {
+                        previousScreen = WasmScreen.SEARCH
+                        currentScreen = WasmScreen.SETTINGS
+                    },
                     onNavigateToSavedBookings = { currentScreen = WasmScreen.SAVED_BOOKINGS }
                 )
             }
@@ -145,6 +163,7 @@ private fun WasmAppContent() {
                 WasmResultsScreenContainer(
                     viewModel = bookingViewModel,
                     localizationState = localizationState,
+                    isEmployee = isEmployee,
                     onBack = { currentScreen = WasmScreen.SEARCH },
                     onContinue = {
                         bookingViewModel.initializePassengerForms()
@@ -167,6 +186,7 @@ private fun WasmAppContent() {
                 WasmPaymentScreenContainer(
                     viewModel = bookingViewModel,
                     localizationState = localizationState,
+                    authToken = authToken,
                     onBack = { currentScreen = WasmScreen.PASSENGERS },
                     onSuccess = {
                         bookingViewModel.initializeConfirmation()
@@ -188,11 +208,12 @@ private fun WasmAppContent() {
             WasmScreen.SETTINGS -> {
                 WasmSettingsScreen(
                     localizationState = localizationState,
-                    onBack = { currentScreen = WasmScreen.SEARCH }
+                    onBack = { currentScreen = previousScreen }
                 )
             }
             WasmScreen.SAVED_BOOKINGS -> {
-                WasmSavedBookingsPlaceholder(
+                WasmSavedBookingsScreen(
+                    authToken = authToken,
                     onBack = { currentScreen = WasmScreen.SEARCH }
                 )
             }
@@ -253,6 +274,7 @@ private fun WasmSearchScreenContainer(
 private fun WasmResultsScreenContainer(
     viewModel: WasmBookingViewModel,
     localizationState: LocalizationState,
+    isEmployee: Boolean = false,
     onBack: () -> Unit,
     onContinue: () -> Unit
 ) {
@@ -299,6 +321,8 @@ private fun WasmResultsScreenContainer(
                     originCode = state.originCode,
                     destinationCode = state.destinationCode,
                     formattedDate = state.departureDate,
+                    isEmployee = isEmployee,
+                    flights = state.flights,
                     onFlightClick = { velocityFlight ->
                         val flight = state.flights.find { it.flightNumber == velocityFlight.id }
                         if (flight != null) {
@@ -307,6 +331,12 @@ private fun WasmResultsScreenContainer(
                     },
                     onFareSelect = { fareFamily ->
                         if (viewModel.selectFare(fareFamily)) {
+                            onContinue()
+                        }
+                    },
+                    onStandbySelect = { flight ->
+                        // Create standby booking with SAR 100 price
+                        if (viewModel.selectStandbyFare(flight)) {
                             onContinue()
                         }
                     },
@@ -820,6 +850,7 @@ private fun VelocityChipSelector(
 private fun WasmPaymentScreenContainer(
     viewModel: WasmBookingViewModel,
     localizationState: LocalizationState,
+    authToken: String?,
     onBack: () -> Unit,
     onSuccess: () -> Unit
 ) {
@@ -1077,7 +1108,7 @@ private fun WasmPaymentScreenContainer(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(
-                    onClick = { viewModel.processPayment(onSuccess) },
+                    onClick = { viewModel.processPayment(authToken, onSuccess) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
@@ -1562,7 +1593,38 @@ private fun LanguageOption(
 }
 
 @Composable
-private fun WasmSavedBookingsPlaceholder(onBack: () -> Unit) {
+private fun WasmSavedBookingsScreen(
+    authToken: String?,
+    onBack: () -> Unit
+) {
+    val apiClient = koinInject<FairairApiClient>()
+    var bookings by remember { mutableStateOf<List<com.fairair.app.api.BookingConfirmationDto>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    // Fetch bookings on first composition
+    LaunchedEffect(authToken) {
+        if (authToken == null) {
+            isLoading = false
+            errorMessage = "Please log in to see your bookings"
+            return@LaunchedEffect
+        }
+        
+        isLoading = true
+        errorMessage = null
+        
+        when (val result = apiClient.getMyBookings(authToken)) {
+            is com.fairair.app.api.ApiResult.Success -> {
+                bookings = result.data
+                isLoading = false
+            }
+            is com.fairair.app.api.ApiResult.Error -> {
+                errorMessage = result.message
+                isLoading = false
+            }
+        }
+    }
+    
     VelocityThemeWithBackground(isRtl = false) {
         Column(
             modifier = Modifier
@@ -1584,30 +1646,185 @@ private fun WasmSavedBookingsPlaceholder(onBack: () -> Unit) {
                     )
                 }
                 Text(
-                    text = "Saved Bookings",
+                    text = "My Bookings",
                     style = VelocityTheme.typography.timeBig,
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
 
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = VelocityColors.Accent)
+                    }
+                }
+                errorMessage != null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = VelocityColors.TextMuted,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Text(
+                                text = errorMessage ?: "Error loading bookings",
+                                style = VelocityTheme.typography.body,
+                                color = VelocityColors.TextMuted
+                            )
+                        }
+                    }
+                }
+                bookings.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = null,
+                                tint = VelocityColors.TextMuted,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Text(
+                                text = "No bookings yet",
+                                style = VelocityTheme.typography.body
+                            )
+                            Text(
+                                text = "Complete a booking to see it here",
+                                style = VelocityTheme.typography.duration,
+                                color = VelocityColors.TextMuted
+                            )
+                        }
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(bookings.size) { index ->
+                            val booking = bookings[index]
+                            BookingCard(booking)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BookingCard(booking: com.fairair.app.api.BookingConfirmationDto) {
+    GlassCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                // PNR
+                Column {
                     Text(
-                        text = "No saved bookings",
-                        style = VelocityTheme.typography.body
-                    )
-                    Text(
-                        text = "Complete a booking to see it here",
+                        text = "Confirmation",
                         style = VelocityTheme.typography.duration,
                         color = VelocityColors.TextMuted
                     )
+                    Text(
+                        text = booking.pnr,
+                        style = VelocityTheme.typography.timeBig,
+                        color = VelocityColors.TextMain
+                    )
                 }
+                
+                // Status badge
+                Box(
+                    modifier = Modifier
+                        .background(
+                            color = when (booking.status) {
+                                "CONFIRMED" -> Color(0xFF22C55E).copy(alpha = 0.2f)
+                                "PENDING" -> Color(0xFFF59E0B).copy(alpha = 0.2f)
+                                else -> Color(0xFFEF4444).copy(alpha = 0.2f)
+                            },
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = booking.status,
+                        style = VelocityTheme.typography.duration,
+                        color = when (booking.status) {
+                            "CONFIRMED" -> Color(0xFF22C55E)
+                            "PENDING" -> Color(0xFFF59E0B)
+                            else -> Color(0xFFEF4444)
+                        }
+                    )
+                }
+            }
+            
+            HorizontalDivider(color = VelocityColors.GlassBorder.copy(alpha = 0.3f))
+            
+            // Booking Reference
+            if (booking.bookingReference.isNotEmpty()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Reference:",
+                        style = VelocityTheme.typography.duration,
+                        color = VelocityColors.TextMuted
+                    )
+                    Text(
+                        text = booking.bookingReference,
+                        style = VelocityTheme.typography.body,
+                        color = VelocityColors.TextMain
+                    )
+                }
+            }
+            
+            // Total paid
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Total Paid",
+                    style = VelocityTheme.typography.body,
+                    color = VelocityColors.TextMuted
+                )
+                Text(
+                    text = booking.totalPrice,
+                    style = VelocityTheme.typography.body,
+                    color = VelocityColors.Accent
+                )
+            }
+            
+            // Created date
+            if (booking.createdAt.isNotEmpty()) {
+                Text(
+                    text = "Booked: ${booking.createdAt.take(10)}",
+                    style = VelocityTheme.typography.duration,
+                    color = VelocityColors.TextMuted
+                )
             }
         }
     }
@@ -1617,7 +1834,7 @@ private fun WasmSavedBookingsPlaceholder(onBack: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WasmLoginScreen(
-    onLogin: () -> Unit,
+    onLogin: (UserInfoDto?, String?) -> Unit,
     onBack: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -1714,7 +1931,7 @@ private fun WasmLoginScreen(
                                 try {
                                     val result = apiClient.login(email, password)
                                     result.fold(
-                                        onSuccess = { onLogin() },
+                                        onSuccess = { response -> onLogin(response.user, response.token) },
                                         onFailure = { errorMessage = "Invalid email or password" }
                                     )
                                 } catch (e: Exception) {

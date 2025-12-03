@@ -34,9 +34,10 @@ interface NavitaireClient {
     /**
      * Creates a booking for the selected flight and passengers.
      * @param request The booking details
+     * @param userId Optional user ID to associate the booking with
      * @return BookingConfirmation with PNR and booking details
      */
-    suspend fun createBooking(request: BookingRequest): BookingConfirmation
+    suspend fun createBooking(request: BookingRequest, userId: String? = null): BookingConfirmation
 
     /**
      * Retrieves an existing booking by PNR.
@@ -44,4 +45,11 @@ interface NavitaireClient {
      * @return BookingConfirmation or null if not found
      */
     suspend fun getBooking(pnr: String): BookingConfirmation?
+    
+    /**
+     * Retrieves all bookings for a user.
+     * @param userId The user's ID
+     * @return List of bookings for this user
+     */
+    suspend fun getBookingsByUser(userId: String): List<BookingConfirmation>
 }
