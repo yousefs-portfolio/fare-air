@@ -35,11 +35,22 @@ class SecurityConfig(
             // Add JWT authentication filter
             .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             
-            // Configure authorization - all endpoints public for demo
+            // Configure authorization
             .authorizeExchange { exchanges ->
                 exchanges
-                    // All endpoints are public for this demo app
-                    .anyExchange().permitAll()
+                    // Public endpoints - no authentication required
+                    .pathMatchers("/health", "/health/**").permitAll()
+                    .pathMatchers("/actuator/**").permitAll()
+                    .pathMatchers("/api/v1/auth/**").permitAll()
+                    .pathMatchers("/api/v1/config/**").permitAll()
+                    .pathMatchers("/api/v1/search").permitAll()
+                    .pathMatchers("/api/v1/booking/**").permitAll()
+                    
+                    // Allow OPTIONS for CORS preflight
+                    .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    
+                    // All other requests require authentication
+                    .anyExchange().authenticated()
             }
             .build()
     }

@@ -155,6 +155,39 @@ interface AppStrings {
     val velocityNoResults: String
     val velocityNoResultsHint: String
     val velocitySearching: String
+
+    // Landing Page
+    val landingHeroTitle1: String
+    val landingHeroTitle2: String
+    val landingHeroSubtitle: String
+    val landingSearchFlights: String
+    val landingFaresFrom: String
+    val landingSignIn: String
+    val landingSpecialOffers: String
+    val landingSpecialOffersSubtitle: String
+    val landingPopularDestinations: String
+    val landingPopularDestinationsSubtitle: String
+    val landingWhyUs: String
+    val landingWhyUsSubtitle: String
+    val landingBestPrice: String
+    val landingBestPriceDesc: String
+    val landingFlexibleBooking: String
+    val landingFlexibleBookingDesc: String
+    val landingSupport: String
+    val landingSupportDesc: String
+    val landingRewards: String
+    val landingRewardsDesc: String
+    val landingFlashSale: String
+    val landingPercentOff: String
+    val landingNewRoute: String
+    val landingPopular: String
+    val landingFrom: String
+    val landingFooterAbout: String
+    val landingFooterHelp: String
+    val landingFooterPrivacy: String
+    val landingFooterTerms: String
+    val landingFooterCopyright: String
+    val landingFooterPortfolio: String
 }
 
 /**
@@ -312,6 +345,39 @@ object EnglishStrings : AppStrings {
     override val velocityNoResults = "No flights found"
     override val velocityNoResultsHint = "Try a different date or route"
     override val velocitySearching = "Searching flights..."
+
+    // Landing Page
+    override val landingHeroTitle1 = "Travel made simple."
+    override val landingHeroTitle2 = "Book your next adventure"
+    override val landingHeroSubtitle = "Discover incredible destinations across the Middle East and beyond with award-winning service and the best prices."
+    override val landingSearchFlights = "Search Flights"
+    override val landingFaresFrom = "Fares starting from SAR 199"
+    override val landingSignIn = "Sign In"
+    override val landingSpecialOffers = "Special Offers"
+    override val landingSpecialOffersSubtitle = "Limited time deals on popular routes"
+    override val landingPopularDestinations = "Popular Destinations"
+    override val landingPopularDestinationsSubtitle = "Where travelers are heading"
+    override val landingWhyUs = "Why FairAir?"
+    override val landingWhyUsSubtitle = "Travel with confidence"
+    override val landingBestPrice = "Best Price Guarantee"
+    override val landingBestPriceDesc = "Find a lower price? We'll match it."
+    override val landingFlexibleBooking = "Flexible Booking"
+    override val landingFlexibleBookingDesc = "Free changes up to 24h before departure."
+    override val landingSupport = "24/7 Support"
+    override val landingSupportDesc = "Our team is always here to help."
+    override val landingRewards = "Earn Rewards"
+    override val landingRewardsDesc = "Points on every flight you book."
+    override val landingFlashSale = "FLASH SALE"
+    override val landingPercentOff = "20% OFF"
+    override val landingNewRoute = "NEW ROUTE"
+    override val landingPopular = "POPULAR"
+    override val landingFrom = "from"
+    override val landingFooterAbout = "About"
+    override val landingFooterHelp = "Help"
+    override val landingFooterPrivacy = "Privacy"
+    override val landingFooterTerms = "Terms"
+    override val landingFooterCopyright = "© 2024 FairAir. All rights reserved."
+    override val landingFooterPortfolio = "A portfolio project"
 }
 
 /**
@@ -469,6 +535,39 @@ object ArabicStrings : AppStrings {
     override val velocityNoResults = "لا توجد رحلات"
     override val velocityNoResultsHint = "جرب تاريخاً أو مساراً مختلفاً"
     override val velocitySearching = "جاري البحث عن الرحلات..."
+
+    // Landing Page
+    override val landingHeroTitle1 = "السفر أصبح سهلاً."
+    override val landingHeroTitle2 = "احجز مغامرتك القادمة"
+    override val landingHeroSubtitle = "اكتشف وجهات مذهلة في الشرق الأوسط وما وراءه مع خدمة حائزة على جوائز وأفضل الأسعار."
+    override val landingSearchFlights = "ابحث عن رحلات"
+    override val landingFaresFrom = "الأسعار تبدأ من ١٩٩ ريال"
+    override val landingSignIn = "تسجيل الدخول"
+    override val landingSpecialOffers = "عروض خاصة"
+    override val landingSpecialOffersSubtitle = "عروض محدودة الوقت على المسارات الشائعة"
+    override val landingPopularDestinations = "الوجهات الشائعة"
+    override val landingPopularDestinationsSubtitle = "إلى أين يتوجه المسافرون"
+    override val landingWhyUs = "لماذا فير إير؟"
+    override val landingWhyUsSubtitle = "سافر بثقة"
+    override val landingBestPrice = "ضمان أفضل سعر"
+    override val landingBestPriceDesc = "وجدت سعراً أقل؟ سنطابقه."
+    override val landingFlexibleBooking = "حجز مرن"
+    override val landingFlexibleBookingDesc = "تغييرات مجانية حتى ٢٤ ساعة قبل المغادرة."
+    override val landingSupport = "دعم على مدار الساعة"
+    override val landingSupportDesc = "فريقنا متواجد دائماً لمساعدتك."
+    override val landingRewards = "اكسب مكافآت"
+    override val landingRewardsDesc = "نقاط على كل رحلة تحجزها."
+    override val landingFlashSale = "عرض سريع"
+    override val landingPercentOff = "خصم ٢٠٪"
+    override val landingNewRoute = "مسار جديد"
+    override val landingPopular = "شائع"
+    override val landingFrom = "من"
+    override val landingFooterAbout = "عن الشركة"
+    override val landingFooterHelp = "المساعدة"
+    override val landingFooterPrivacy = "الخصوصية"
+    override val landingFooterTerms = "الشروط"
+    override val landingFooterCopyright = "© ٢٠٢٤ فير إير. جميع الحقوق محفوظة."
+    override val landingFooterPortfolio = "مشروع محفظة أعمال"
 }
 
 /**

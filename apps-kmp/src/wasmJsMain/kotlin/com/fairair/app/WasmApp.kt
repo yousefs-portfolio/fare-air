@@ -38,10 +38,15 @@ import com.fairair.app.ui.screens.results.*
 import com.fairair.app.ui.screens.search.VelocitySearchScreen
 import com.fairair.app.ui.screens.search.VelocitySearchScreenError
 import com.fairair.app.ui.screens.search.VelocitySearchScreenLoading
+import com.fairair.app.ui.screens.landing.LandingScreen
+import com.fairair.app.ui.components.velocity.GlassCard
+import com.fairair.app.ui.theme.NotoKufiArabicFontFamily
+import com.fairair.app.ui.theme.SpaceGroteskFontFamily
 import com.fairair.app.ui.theme.VelocityColors
 import com.fairair.app.ui.theme.VelocityTheme
 import com.fairair.app.ui.theme.VelocityThemeWithBackground
 import com.fairair.app.viewmodel.*
+import kotlinx.coroutines.launch
 import org.koin.compose.KoinContext
 import org.koin.compose.koinInject
 
@@ -68,13 +73,15 @@ fun WasmApp() {
  * Since we can't use Voyager, we use simple enum-based navigation.
  */
 private enum class WasmScreen {
+    LANDING,
     SEARCH,
     RESULTS,
     PASSENGERS,
     PAYMENT,
     CONFIRMATION,
     SETTINGS,
-    SAVED_BOOKINGS
+    SAVED_BOOKINGS,
+    LOGIN
 }
 
 @Composable
@@ -85,7 +92,7 @@ private fun WasmAppContent() {
     val scope = rememberCoroutineScope()
 
     // Navigation state
-    var currentScreen by remember { mutableStateOf(WasmScreen.SEARCH) }
+    var currentScreen by remember { mutableStateOf(WasmScreen.LANDING) }
 
     // ViewModels - created once and reused
     val searchViewModel = remember {
@@ -97,11 +104,35 @@ private fun WasmAppContent() {
 
     // Wrap in localization provider
     LocalizationProvider(localizationState) {
-        when (currentScreen) {
+        VelocityTheme(isRtl = localizationState.isRtl) {
+            when (currentScreen) {
+                WasmScreen.LANDING -> {
+                    LandingScreen(
+                        onFlyNowClick = { currentScreen = WasmScreen.SEARCH },
+                        onLoginClick = { currentScreen = WasmScreen.LOGIN },
+                        onSettingsClick = { currentScreen = WasmScreen.SETTINGS },
+                        onDealClick = { origin, destination ->
+                            searchViewModel.preselectRoute(origin, destination)
+                            currentScreen = WasmScreen.SEARCH
+                        },
+                        onDestinationClick = { destination ->
+                            searchViewModel.preselectDestination(destination)
+                            currentScreen = WasmScreen.SEARCH
+                        },
+                        isRtl = localizationState.isRtl
+                    )
+                }
+                WasmScreen.LOGIN -> {
+                    WasmLoginScreen(
+                    onLogin = { currentScreen = WasmScreen.SEARCH },
+                    onBack = { currentScreen = WasmScreen.LANDING }
+                )
+            }
             WasmScreen.SEARCH -> {
                 WasmSearchScreenContainer(
                     viewModel = searchViewModel,
                     localizationState = localizationState,
+                    onBack = { currentScreen = WasmScreen.LANDING },
                     onNavigateToResults = {
                         bookingViewModel.initializeResults()
                         currentScreen = WasmScreen.RESULTS
@@ -166,6 +197,7 @@ private fun WasmAppContent() {
                 )
             }
         }
+        }
     }
 }
 
@@ -173,6 +205,7 @@ private fun WasmAppContent() {
 private fun WasmSearchScreenContainer(
     viewModel: WasmSearchViewModel,
     localizationState: LocalizationState,
+    onBack: () -> Unit,
     onNavigateToResults: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSavedBookings: () -> Unit
@@ -198,6 +231,7 @@ private fun WasmSearchScreenContainer(
                 state = velocityState,
                 strings = strings,
                 isRtl = isRtl,
+                onBack = onBack,
                 onOriginSelect = viewModel::selectVelocityOrigin,
                 onDestinationSelect = viewModel::selectVelocityDestination,
                 onDateSelect = viewModel::selectVelocityDate,
@@ -1481,7 +1515,8 @@ private fun WasmSettingsScreen(
                     LanguageOption(
                         name = "العربية",
                         isSelected = localizationState.currentLanguage == AppLanguage.ARABIC,
-                        onClick = { localizationState.setLanguage(AppLanguage.ARABIC) }
+                        onClick = { localizationState.setLanguage(AppLanguage.ARABIC) },
+                        useArabicFont = true
                     )
                 }
             }
@@ -1493,8 +1528,16 @@ private fun WasmSettingsScreen(
 private fun LanguageOption(
     name: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    useArabicFont: Boolean = false
 ) {
+    // Get the appropriate font family
+    val fontFamily = if (useArabicFont) {
+        NotoKufiArabicFontFamily()
+    } else {
+        SpaceGroteskFontFamily()
+    }
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1506,7 +1549,7 @@ private fun LanguageOption(
     ) {
         Text(
             text = name,
-            style = VelocityTheme.typography.body
+            style = VelocityTheme.typography.body.copy(fontFamily = fontFamily)
         )
         if (isSelected) {
             Icon(
@@ -1567,6 +1610,209 @@ private fun WasmSavedBookingsPlaceholder(onBack: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+// Login Screen
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WasmLoginScreen(
+    onLogin: () -> Unit,
+    onBack: () -> Unit
+) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+    val apiClient = koinInject<FairairApiClient>()
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(VelocityColors.BackgroundDeep)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Logo and Title
+            Text(
+                text = "✈️",
+                style = MaterialTheme.typography.displayLarge
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = "Welcome to Fairair",
+                style = MaterialTheme.typography.headlineLarge,
+                color = VelocityColors.TextMain
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Sign in to continue",
+                style = MaterialTheme.typography.bodyMedium,
+                color = VelocityColors.TextMuted
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Login Card
+            GlassCard(
+                modifier = Modifier
+                    .widthIn(max = 400.dp)
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    WasmTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = "Email",
+                        placeholder = "Enter your email",
+                        keyboardType = KeyboardType.Email
+                    )
+                    
+                    WasmTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = "Password",
+                        placeholder = "Enter your password",
+                        isPassword = true
+                    )
+                    
+                    // Error Message
+                    errorMessage?.let { error ->
+                        Text(
+                            text = error,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFEF4444),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Login Button
+                    Button(
+                        onClick = {
+                            if (email.isBlank() || password.isBlank()) {
+                                errorMessage = "Please enter email and password"
+                                return@Button
+                            }
+                            isLoading = true
+                            errorMessage = null
+                            scope.launch {
+                                try {
+                                    val result = apiClient.login(email, password)
+                                    result.fold(
+                                        onSuccess = { onLogin() },
+                                        onFailure = { errorMessage = "Invalid email or password" }
+                                    )
+                                } catch (e: Exception) {
+                                    errorMessage = "Login failed: ${e.message}"
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        enabled = !isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = VelocityColors.Accent,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Sign In", style = MaterialTheme.typography.labelLarge)
+                        }
+                    }
+                    
+                    // Continue as Guest
+                    TextButton(
+                        onClick = onBack,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "Continue as Guest",
+                            color = VelocityColors.Accent,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Demo Users Info
+            GlassCard(
+                modifier = Modifier
+                    .widthIn(max = 400.dp)
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Demo Accounts",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = VelocityColors.TextMain
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    DemoUserRow("Employee", "john.smith@fairair.com")
+                    DemoUserRow("User", "jane@test.com")
+                    DemoUserRow("Admin", "admin@test.com")
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Password for all: password",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = VelocityColors.TextMuted
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DemoUserRow(role: String, email: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = role,
+            style = VelocityTheme.typography.duration,
+            color = VelocityColors.TextMuted
+        )
+        Text(
+            text = email,
+            style = VelocityTheme.typography.duration,
+            color = VelocityColors.Accent
+        )
     }
 }
 

@@ -202,4 +202,54 @@ class WasmSearchViewModel(
         _velocityState.update { it.copy(isLoading = true, error = null) }
         loadInitialData()
     }
+
+    /**
+     * Preselects an origin by airport code.
+     * If the code matches an available origin, it will be selected.
+     */
+    fun preselectOrigin(code: String) {
+        val state = _velocityState.value
+        val station = state.availableOrigins.find { it.code == code }
+        if (station != null) {
+            selectVelocityOrigin(station)
+        }
+    }
+
+    /**
+     * Preselects a destination by airport code.
+     * Clears any previously selected origin.
+     * If the code matches an available station, it will be selected as destination.
+     */
+    fun preselectDestination(code: String) {
+        // Clear the origin first
+        _velocityState.update { state ->
+            state.copy(
+                selectedOrigin = null,
+                selectedDestination = null,
+                availableDestinations = emptyList(),
+                destinationBackground = null
+            )
+        }
+        // Then set the destination
+        val state = _velocityState.value
+        val station = state.availableOrigins.find { it.code == code }
+        if (station != null) {
+            selectVelocityDestination(station)
+        }
+    }
+
+    /**
+     * Preselects both origin and destination by airport codes.
+     */
+    fun preselectRoute(originCode: String, destinationCode: String) {
+        // First select origin, which will populate available destinations
+        preselectOrigin(originCode)
+        // Then select destination from the now-available destinations
+        val state = _velocityState.value
+        val destinationStation = state.availableDestinations.find { it.code == destinationCode }
+            ?: state.availableOrigins.find { it.code == destinationCode }
+        if (destinationStation != null) {
+            selectVelocityDestination(destinationStation)
+        }
+    }
 }

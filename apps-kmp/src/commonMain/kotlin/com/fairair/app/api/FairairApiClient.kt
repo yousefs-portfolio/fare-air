@@ -117,6 +117,28 @@ class FairairApiClient(
     }
 
     /**
+     * Login with email and password.
+     * @param email User email
+     * @param password User password
+     * @return LoginResponseDto with JWT token on success
+     */
+    suspend fun login(email: String, password: String): Result<LoginResponseDto> {
+        return try {
+            val response = httpClient.post("$baseUrl/api/v1/auth/login") {
+                contentType(ContentType.Application.Json)
+                setBody(LoginRequestDto(email, password))
+            }
+            if (response.status.isSuccess()) {
+                Result.success(response.body())
+            } else {
+                Result.failure(Exception("Login failed: ${response.status}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Wraps API calls with error handling and automatic retry for transient failures.
      * Uses exponential backoff with jitter for retries.
      *
@@ -340,6 +362,27 @@ sealed class ApiResult<out T> {
 }
 
 // DTO classes for API communication - matches backend response format
+
+@Serializable
+data class LoginRequestDto(
+    val email: String,
+    val password: String
+)
+
+@Serializable
+data class LoginResponseDto(
+    val token: String,
+    val expiresIn: Long = 86400000,
+    val user: UserInfoDto? = null
+)
+
+@Serializable
+data class UserInfoDto(
+    val email: String,
+    val firstName: String,
+    val lastName: String,
+    val role: String
+)
 
 @Serializable
 data class RouteMapDto(

@@ -8,44 +8,23 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Note: Custom font loading via compose-resources causes rendering issues in Wasm.
-// Using system fonts for now. To re-enable custom fonts, uncomment the imports
-// and the custom FontFamily implementations below.
-//
-// import com.fairair.apps_kmp.generated.resources.*
-// import org.jetbrains.compose.resources.Font
-
 /**
  * Space Grotesk font family for English/Latin text.
- * Currently using system SansSerif due to Wasm font loading issues.
+ * Platform-specific implementation:
+ * - Android/iOS: Uses compose-resources Font()
+ * - WasmJs: Uses pre-loaded fonts from main.kt
  */
 @Composable
-fun SpaceGroteskFontFamily(): FontFamily = FontFamily.SansSerif
+expect fun SpaceGroteskFontFamily(): FontFamily
 
 /**
  * Noto Kufi Arabic font family for Arabic/RTL text.
- * Currently using system SansSerif due to Wasm font loading issues.
+ * Platform-specific implementation:
+ * - Android/iOS: Uses compose-resources Font()
+ * - WasmJs: Uses pre-loaded fonts from main.kt
  */
 @Composable
-fun NotoKufiArabicFontFamily(): FontFamily = FontFamily.SansSerif
-
-// Original custom font implementations (disabled due to Wasm issues):
-// @Composable
-// fun SpaceGroteskFontFamily(): FontFamily = FontFamily(
-//     Font(Res.font.space_grotesk_light, FontWeight.Light),
-//     Font(Res.font.space_grotesk_regular, FontWeight.Normal),
-//     Font(Res.font.space_grotesk_medium, FontWeight.Medium),
-//     Font(Res.font.space_grotesk_semibold, FontWeight.SemiBold),
-//     Font(Res.font.space_grotesk_bold, FontWeight.Bold)
-// )
-//
-// @Composable
-// fun NotoKufiArabicFontFamily(): FontFamily = FontFamily(
-//     Font(Res.font.noto_kufi_arabic_light, FontWeight.Light),
-//     Font(Res.font.noto_kufi_arabic_regular, FontWeight.Normal),
-//     Font(Res.font.noto_kufi_arabic_semibold, FontWeight.SemiBold),
-//     Font(Res.font.noto_kufi_arabic_bold, FontWeight.Bold)
-// )
+expect fun NotoKufiArabicFontFamily(): FontFamily
 
 /**
  * Velocity typography definitions for English/Latin text.

@@ -38,20 +38,63 @@ class JwtAuthenticationFilter(
             "/api/v1/auth/refresh",
             "/api/v1/config/stations",
             "/api/v1/config/routes",
-            "/api/v1/config/route-map"
+            "/api/v1/config/route-map",
+            "/api/v1/search",
+            "/api/v1/booking"
         )
         
         /**
          * Path prefixes that don't require authentication
          */
         private val PUBLIC_PATH_PREFIXES = setOf(
-            "/actuator/"
+            "/actuator/",
+            "/api/v1/booking/"
         )
     }
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
-        // Authentication disabled for demo - pass through all requests
-        return chain.filter(exchange)
+        val path = exchange.request.uri.path
+        
+        // Skip authentication for public paths
+        if (isPublicPath(path)) {
+            return chain.filter(exchange)
+        }
+
+        val authHeader = exchange.request.headers.getFirst(HttpHeaders.AUTHORIZATION)
+        
+        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            log.debug("No valid Authorization header for path: $path")
+            return handleUnauthorized(exchange, "Missing or invalid Authorization header")
+        }
+
+        val token = authHeader.substring(BEARER_PREFIX.length)
+        
+        return when (val result = jwtTokenProvider.validateToken(token)) {
+            is TokenValidationResult.Valid -> {
+                if (result.tokenType != "access") {
+                    log.debug("Invalid token type for authentication: ${result.tokenType}")
+                    return handleUnauthorized(exchange, "Invalid token type")
+                }
+                
+                log.debug("Authenticated user: ${result.userId}")
+                
+                val authorities = listOf(SimpleGrantedAuthority("ROLE_USER"))
+                val authentication = UsernamePasswordAuthenticationToken(
+                    result.userId,
+                    null,
+                    authorities
+                )
+                
+                chain.filter(exchange)
+                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication))
+            }
+            is TokenValidationResult.Expired -> {
+                handleUnauthorized(exchange, "Token expired")
+            }
+            is TokenValidationResult.Invalid -> {
+                handleUnauthorized(exchange, "Invalid token")
+            }
+        }
     }
 
     private fun isPublicPath(path: String): Boolean {

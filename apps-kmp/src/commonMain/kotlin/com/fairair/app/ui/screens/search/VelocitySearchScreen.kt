@@ -3,6 +3,7 @@ package com.fairair.app.ui.screens.search
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -46,6 +47,7 @@ fun VelocitySearchScreen(
     state: VelocitySearchState,
     strings: AppStrings,
     isRtl: Boolean,
+    onBack: (() -> Unit)? = null,
     onOriginSelect: (StationDto) -> Unit,
     onDestinationSelect: (StationDto) -> Unit,
     onDateSelect: (LocalDate) -> Unit,
@@ -71,6 +73,7 @@ fun VelocitySearchScreen(
             ) {
                 // Header
                 VelocitySearchHeader(
+                    onBack = onBack,
                     onSettingsClick = onNavigateToSettings,
                     onSavedBookingsClick = onNavigateToSavedBookings
                 )
@@ -201,6 +204,7 @@ fun VelocitySearchScreen(
 
 @Composable
 private fun VelocitySearchHeader(
+    onBack: (() -> Unit)?,
     onSettingsClick: () -> Unit,
     onSavedBookingsClick: () -> Unit
 ) {
@@ -211,13 +215,24 @@ private fun VelocitySearchHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Saved bookings button
-        IconButton(onClick = onSavedBookingsClick) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "Saved Bookings",
-                tint = VelocityColors.TextMuted
-            )
+        // Back button or Saved bookings
+        Row {
+            if (onBack != null) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = VelocityColors.TextMuted
+                    )
+                }
+            }
+            IconButton(onClick = onSavedBookingsClick) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Saved Bookings",
+                    tint = VelocityColors.TextMuted
+                )
+            }
         }
 
         // Settings button
