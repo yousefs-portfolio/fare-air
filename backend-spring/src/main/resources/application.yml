@@ -4,6 +4,23 @@ server:
 spring:
   application:
     name: fairair-backend
+  
+  # R2DBC Database Configuration
+  # Current: H2 file-based database (persistent)
+  # To switch to PostgreSQL, change to:
+  #   url: r2dbc:postgresql://localhost:5432/fairair
+  #   username: your_username
+  #   password: your_password
+  r2dbc:
+    url: r2dbc:h2:file:///./data/fairair
+    username: sa
+    password: 
+  
+  # Initialize database with schema and data
+  sql:
+    init:
+      mode: always
+  
   jackson:
     serialization:
       write-dates-as-timestamps: false

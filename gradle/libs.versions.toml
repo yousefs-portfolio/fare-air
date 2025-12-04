@@ -18,6 +18,11 @@ android-compileSdk = "34"
 spring-boot = "3.2.0"
 spring-dependency-management = "1.1.4"
 
+# Database
+r2dbc-sqlite = "0.1.2"
+sqlite-jdbc = "3.45.1.0"
+flyway = "10.4.1"
+
 # Spring Security
 jjwt = "0.12.6"
 
@@ -81,8 +86,16 @@ voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", vers
 spring-boot-starter-webflux = { module = "org.springframework.boot:spring-boot-starter-webflux", version.ref = "spring-boot" }
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "spring-boot" }
 spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security", version.ref = "spring-boot" }
+spring-boot-starter-data-r2dbc = { module = "org.springframework.boot:spring-boot-starter-data-r2dbc", version.ref = "spring-boot" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.15.3" }
+
+# Database
+r2dbc-sqlite = { module = "io.r2dbc:r2dbc-spi", version = "1.0.0.RELEASE" }
+r2dbc-h2 = { module = "io.r2dbc:r2dbc-h2", version = "1.0.0.RELEASE" }
+h2-database = { module = "com.h2database:h2", version = "2.2.224" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 
 # JWT
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }

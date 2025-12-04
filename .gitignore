@@ -47,6 +47,12 @@ Desktop.ini
 *.local.properties
 local.properties
 
+# Database (H2 file-based database)
+data/
+*.db
+*.mv.db
+*.trace.db
+
 # Logs
 *.log
 logs/

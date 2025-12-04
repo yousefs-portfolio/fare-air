@@ -2,18 +2,24 @@ package com.fairair.client
 
 import com.fairair.config.FairairProperties
 import com.fairair.contract.model.*
+import com.fairair.entity.BookingEntity
+import com.fairair.repository.BookingRepository
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.*
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
 /**
  * Mock implementation of NavitaireClient for development and testing.
  * Generates realistic flight data with configurable delays to simulate network latency.
+ * 
+ * Uses database-backed storage for bookings via BookingRepository.
  *
  * Activated when fairair.provider=mock (default).
  */
@@ -24,20 +30,16 @@ import kotlin.random.Random
     matchIfMissing = true
 )
 class MockNavitaireClient(
-    private val config: FairairProperties
+    private val config: FairairProperties,
+    private val bookingRepository: BookingRepository
 ) : NavitaireClient {
 
     private val log = LoggerFactory.getLogger(MockNavitaireClient::class.java)
-
-    /**
-     * In-memory store for created bookings (keyed by PNR).
-     */
-    private val bookingStore = ConcurrentHashMap<String, BookingConfirmation>()
     
-    /**
-     * Maps user IDs to their booking PNRs.
-     */
-    private val userBookings = ConcurrentHashMap<String, MutableList<String>>()
+    private val json = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
 
     /**
      * Simulates network delay based on configuration.
@@ -137,6 +139,7 @@ class MockNavitaireClient(
 
         val pnr = PnrCode.generate()
         val now = Clock.System.now()
+        val departureTime = now.plus(1, DateTimeUnit.DAY, TimeZone.UTC)
 
         val confirmation = BookingConfirmation(
             pnr = pnr,
@@ -145,7 +148,7 @@ class MockNavitaireClient(
                 flightNumber = request.flightNumber,
                 origin = AirportCode("JED"),
                 destination = AirportCode("RUH"),
-                departureTime = now.plus(1, DateTimeUnit.DAY, TimeZone.UTC),
+                departureTime = departureTime,
                 fareFamily = request.fareFamily
             ),
             passengers = request.passengers.map { passenger ->
@@ -158,15 +161,24 @@ class MockNavitaireClient(
             createdAt = now
         )
 
-        bookingStore[pnr.value] = confirmation
+        // Persist to database
+        val entity = BookingEntity(
+            pnr = pnr.value,
+            bookingReference = confirmation.bookingReference,
+            userId = userId,
+            flightNumber = request.flightNumber,
+            origin = "JED",
+            destination = "RUH",
+            departureTime = java.time.Instant.ofEpochMilli(departureTime.toEpochMilliseconds()),
+            fareFamily = request.fareFamily.name,
+            passengersJson = json.encodeToString(confirmation.passengers),
+            totalAmount = request.payment.totalAmount.amountAsDouble,
+            currency = request.payment.totalAmount.currency.name,
+            createdAt = java.time.Instant.ofEpochMilli(now.toEpochMilliseconds())
+        )
+        bookingRepository.save(entity)
         
-        // Associate booking with user if logged in
-        if (userId != null) {
-            userBookings.getOrPut(userId) { mutableListOf() }.add(pnr.value)
-            log.info("Booking ${pnr.value} associated with user $userId")
-        }
-        
-        log.info("Booking created with PNR=${pnr.value}")
+        log.info("Booking ${pnr.value} persisted to database" + if (userId != null) ", associated with user $userId" else "")
 
         return confirmation
     }
@@ -174,14 +186,45 @@ class MockNavitaireClient(
     override suspend fun getBooking(pnr: String): BookingConfirmation? {
         simulateDelay()
         log.info("Retrieving booking for PNR=$pnr")
-        return bookingStore[pnr]
+        
+        val entity = bookingRepository.findByPnr(pnr) ?: return null
+        return entity.toBookingConfirmation()
     }
     
     override suspend fun getBookingsByUser(userId: String): List<BookingConfirmation> {
         simulateDelay()
         log.info("Retrieving bookings for user=$userId")
-        val pnrs = userBookings[userId] ?: return emptyList()
-        return pnrs.mapNotNull { bookingStore[it] }
+        
+        return bookingRepository.findByUserId(userId)
+            .toList()
+            .map { it.toBookingConfirmation() }
+    }
+    
+    /**
+     * Converts a BookingEntity to a BookingConfirmation.
+     */
+    private fun BookingEntity.toBookingConfirmation(): BookingConfirmation {
+        val passengers: List<PassengerSummary> = try {
+            json.decodeFromString(passengersJson)
+        } catch (e: Exception) {
+            log.warn("Failed to parse passengers JSON for PNR=$pnr", e)
+            emptyList()
+        }
+        
+        return BookingConfirmation(
+            pnr = PnrCode(pnr),
+            bookingReference = bookingReference,
+            flight = FlightSummary(
+                flightNumber = flightNumber,
+                origin = AirportCode(origin),
+                destination = AirportCode(destination),
+                departureTime = Instant.fromEpochMilliseconds(departureTime.toEpochMilli()),
+                fareFamily = FareFamilyCode.valueOf(fareFamily)
+            ),
+            passengers = passengers,
+            totalPaid = Money.of(totalAmount, Currency.valueOf(currency)),
+            createdAt = Instant.fromEpochMilliseconds(createdAt.toEpochMilli())
+        )
     }
 
     /**

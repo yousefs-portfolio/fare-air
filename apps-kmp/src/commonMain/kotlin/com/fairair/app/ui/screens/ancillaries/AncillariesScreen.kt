@@ -3,6 +3,8 @@ package com.fairair.app.ui.screens.ancillaries
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -435,6 +437,7 @@ private fun VelocityMealsCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .pointerHoverIcon(PointerIcon.Hand)
                     .clickable {
                         passengerIds.firstOrNull()?.let { passengerId ->
                             onSelectMeal(passengerId, meal.code)

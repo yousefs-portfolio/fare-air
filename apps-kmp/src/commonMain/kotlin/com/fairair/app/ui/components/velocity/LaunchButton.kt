@@ -23,6 +23,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
 import com.fairair.app.ui.theme.VelocityColors
 
@@ -98,6 +100,7 @@ fun LaunchButton(
             }
             .clip(CircleShape)
             .background(backgroundColor)
+            .pointerHoverIcon(if (enabled && !loading) PointerIcon.Hand else PointerIcon.Default)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -160,6 +163,7 @@ fun LaunchButtonSmall(
             }
             .clip(CircleShape)
             .background(backgroundColor)
+            .pointerHoverIcon(if (enabled && !loading) PointerIcon.Hand else PointerIcon.Default)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,

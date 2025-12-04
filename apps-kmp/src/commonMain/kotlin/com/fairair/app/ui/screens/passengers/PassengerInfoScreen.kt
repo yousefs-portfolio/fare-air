@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -151,6 +153,7 @@ private fun PassengerInfoContent(
                                 if (index <= uiState.currentPassengerIndex) VelocityColors.Accent
                                 else VelocityColors.GlassBorder
                             )
+                            .pointerHoverIcon(PointerIcon.Hand)
                             .clickable { onGoToPassenger(index) }
                     )
                     if (index < uiState.passengers.size - 1) {

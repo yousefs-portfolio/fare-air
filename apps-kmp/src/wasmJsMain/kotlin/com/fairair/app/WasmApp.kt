@@ -24,6 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -38,6 +40,7 @@ import com.fairair.app.localization.LocalizationProvider
 import com.fairair.app.localization.LocalizationState
 import com.fairair.app.localization.rememberLocalizationState
 import com.fairair.app.state.BookingFlowState
+import com.fairair.app.persistence.LocalStorage
 import com.fairair.app.ui.screens.results.*
 import com.fairair.app.ui.screens.search.VelocitySearchScreen
 import com.fairair.app.ui.screens.search.VelocitySearchScreenError
@@ -114,9 +117,26 @@ private fun WasmAppContent() {
     // Navigation state - initialized from URL hash
     var currentScreen by remember { mutableStateOf(parseScreenFromHash()) }
     var previousScreen by remember { mutableStateOf(WasmScreen.LANDING) }
+    var isNavigatingBack by remember { mutableStateOf(false) }
     
-    // Update URL hash when screen changes
+    // Helper function for navigating back - falls back to landing if no history
+    fun navigateBack() {
+        // If we have history (more than 1 entry), use browser back
+        // Otherwise, navigate directly to landing page
+        if (window.history.length > 1) {
+            window.history.back()
+        } else {
+            // No history, navigate directly
+            currentScreen = WasmScreen.LANDING
+        }
+    }
+    
+    // Update URL hash when screen changes (only if not navigating via browser back/forward)
     LaunchedEffect(currentScreen) {
+        if (isNavigatingBack) {
+            isNavigatingBack = false
+            return@LaunchedEffect
+        }
         val hash = when (currentScreen) {
             WasmScreen.LANDING -> ""
             WasmScreen.SEARCH -> "search"
@@ -128,25 +148,30 @@ private fun WasmAppContent() {
             WasmScreen.SAVED_BOOKINGS -> "bookings"
             WasmScreen.LOGIN -> "login"
         }
-        if (window.location.hash != "#$hash") {
-            window.history.pushState(null, "", if (hash.isEmpty()) "/" else "#$hash")
+        val newUrl = if (hash.isEmpty()) "/" else "#$hash"
+        if (window.location.hash != "#$hash" && window.location.pathname + window.location.hash != newUrl) {
+            window.history.pushState(null, "", newUrl)
         }
     }
     
-    // Handle browser back/forward buttons
+    // Handle browser back/forward buttons (popstate event)
     DisposableEffect(Unit) {
         val callback: (org.w3c.dom.events.Event) -> Unit = {
+            isNavigatingBack = true
             currentScreen = parseScreenFromHash()
         }
-        window.addEventListener("hashchange", callback)
+        window.addEventListener("popstate", callback)
         onDispose {
-            window.removeEventListener("hashchange", callback)
+            window.removeEventListener("popstate", callback)
         }
     }
     
-    // User state - tracks logged in user and auth token
-    var currentUser by remember { mutableStateOf<UserInfoDto?>(null) }
-    var authToken by remember { mutableStateOf<String?>(null) }
+    // LocalStorage for persisting auth state
+    val localStorage = koinInject<LocalStorage>()
+    
+    // User state - initialized from localStorage for persistence across refreshes
+    var currentUser by remember { mutableStateOf(localStorage.getCurrentUser()) }
+    var authToken by remember { mutableStateOf(localStorage.getAuthToken()) }
     val isEmployee = currentUser?.role == "EMPLOYEE"
 
     // ViewModels - created once and reused
@@ -157,115 +182,134 @@ private fun WasmAppContent() {
         WasmBookingViewModel(apiClient, bookingFlowState, scope)
     }
 
-    // Wrap in localization provider and SelectionContainer for text selection
+    // Wrap in localization provider
     LocalizationProvider(localizationState) {
         VelocityTheme(isRtl = localizationState.isRtl) {
             SelectionContainer {
-            when (currentScreen) {
-                WasmScreen.LANDING -> {
-                    LandingScreen(
-                        onFlyNowClick = { currentScreen = WasmScreen.SEARCH },
-                        onLoginClick = { currentScreen = WasmScreen.LOGIN },
-                        onSettingsClick = {
-                            previousScreen = WasmScreen.LANDING
-                            currentScreen = WasmScreen.SETTINGS
-                        },
-                        onDealClick = { origin, destination ->
-                            searchViewModel.preselectRoute(origin, destination)
-                            currentScreen = WasmScreen.SEARCH
-                        },
-                        onDestinationClick = { destination ->
-                            searchViewModel.preselectDestination(destination)
-                            currentScreen = WasmScreen.SEARCH
-                        },
-                        isRtl = localizationState.isRtl
-                    )
+                when (currentScreen) {
+                    WasmScreen.LANDING -> {
+                        LandingScreen(
+                            onFlyNowClick = { currentScreen = WasmScreen.SEARCH },
+                            onLoginClick = { currentScreen = WasmScreen.LOGIN },
+                            onLogoutClick = {
+                                localStorage.clearAuth()
+                                currentUser = null
+                                authToken = null
+                            },
+                            onMyBookingsClick = { currentScreen = WasmScreen.SAVED_BOOKINGS },
+                            onSettingsClick = {
+                                previousScreen = WasmScreen.LANDING
+                                currentScreen = WasmScreen.SETTINGS
+                            },
+                            onDealClick = { origin, destination ->
+                                searchViewModel.preselectRoute(origin, destination)
+                                currentScreen = WasmScreen.SEARCH
+                            },
+                            onDestinationClick = { destination ->
+                                searchViewModel.preselectDestination(destination)
+                                currentScreen = WasmScreen.SEARCH
+                            },
+                            userName = currentUser?.firstName,
+                            isRtl = localizationState.isRtl
+                        )
                 }
                 WasmScreen.LOGIN -> {
                     WasmLoginScreen(
-                    onLogin = { user, token -> 
-                        currentUser = user
-                        authToken = token
-                        currentScreen = WasmScreen.SEARCH 
-                    },
-                    onBack = { currentScreen = WasmScreen.LANDING }
-                )
+                        onLogin = { user, token -> 
+                            // Persist auth state to localStorage (only if values are present)
+                            token?.let { localStorage.saveAuthToken(it) }
+                            user?.let { localStorage.saveCurrentUser(it) }
+                            currentUser = user
+                            authToken = token
+                            currentScreen = WasmScreen.LANDING 
+                        },
+                        onBack = { navigateBack() }
+                    )
+                }
+                WasmScreen.SEARCH -> {
+                    WasmSearchScreenContainer(
+                        viewModel = searchViewModel,
+                        localizationState = localizationState,
+                        onBack = { navigateBack() },
+                        onNavigateToResults = {
+                            bookingViewModel.initializeResults()
+                            currentScreen = WasmScreen.RESULTS
+                        },
+                        onNavigateToSettings = {
+                            previousScreen = WasmScreen.SEARCH
+                            currentScreen = WasmScreen.SETTINGS
+                        },
+                        onNavigateToSavedBookings = { currentScreen = WasmScreen.SAVED_BOOKINGS }
+                    )
+                }
+                WasmScreen.RESULTS -> {
+                    WasmResultsScreenContainer(
+                        viewModel = bookingViewModel,
+                        localizationState = localizationState,
+                        isEmployee = isEmployee,
+                        onBack = { navigateBack() },
+                        onContinue = {
+                            bookingViewModel.initializePassengerForms()
+                            currentScreen = WasmScreen.PASSENGERS
+                        }
+                    )
+                }
+                WasmScreen.PASSENGERS -> {
+                    WasmPassengerScreenContainer(
+                        viewModel = bookingViewModel,
+                        localizationState = localizationState,
+                        onBack = { navigateBack() },
+                        onContinue = {
+                            bookingViewModel.initializePayment()
+                            currentScreen = WasmScreen.PAYMENT
+                        }
+                    )
+                }
+                WasmScreen.PAYMENT -> {
+                    WasmPaymentScreenContainer(
+                        viewModel = bookingViewModel,
+                        localizationState = localizationState,
+                        authToken = authToken,
+                        onBack = { navigateBack() },
+                        onSuccess = {
+                            bookingViewModel.initializeConfirmation()
+                            currentScreen = WasmScreen.CONFIRMATION
+                        }
+                    )
+                }
+                WasmScreen.CONFIRMATION -> {
+                    WasmConfirmationScreenContainer(
+                        viewModel = bookingViewModel,
+                        localizationState = localizationState,
+                        onNewBooking = {
+                            bookingViewModel.resetForNewBooking()
+                            searchViewModel.retry()
+                            currentScreen = WasmScreen.SEARCH
+                        }
+                    )
+                }
+                WasmScreen.SETTINGS -> {
+                    WasmSettingsScreen(
+                        localizationState = localizationState,
+                        onBack = { navigateBack() }
+                    )
+                }
+                WasmScreen.SAVED_BOOKINGS -> {
+                    WasmSavedBookingsScreen(
+                        authToken = authToken,
+                        onBack = { navigateBack() },
+                        onTokenExpired = {
+                            // Clear invalid auth data
+                            localStorage.clearAuth()
+                            authToken = null
+                            currentUser = null
+                        },
+                        onNavigateToLogin = {
+                            currentScreen = WasmScreen.LOGIN
+                        }
+                    )
+                }
             }
-            WasmScreen.SEARCH -> {
-                WasmSearchScreenContainer(
-                    viewModel = searchViewModel,
-                    localizationState = localizationState,
-                    onBack = { currentScreen = WasmScreen.LANDING },
-                    onNavigateToResults = {
-                        bookingViewModel.initializeResults()
-                        currentScreen = WasmScreen.RESULTS
-                    },
-                    onNavigateToSettings = {
-                        previousScreen = WasmScreen.SEARCH
-                        currentScreen = WasmScreen.SETTINGS
-                    },
-                    onNavigateToSavedBookings = { currentScreen = WasmScreen.SAVED_BOOKINGS }
-                )
-            }
-            WasmScreen.RESULTS -> {
-                WasmResultsScreenContainer(
-                    viewModel = bookingViewModel,
-                    localizationState = localizationState,
-                    isEmployee = isEmployee,
-                    onBack = { currentScreen = WasmScreen.SEARCH },
-                    onContinue = {
-                        bookingViewModel.initializePassengerForms()
-                        currentScreen = WasmScreen.PASSENGERS
-                    }
-                )
-            }
-            WasmScreen.PASSENGERS -> {
-                WasmPassengerScreenContainer(
-                    viewModel = bookingViewModel,
-                    localizationState = localizationState,
-                    onBack = { currentScreen = WasmScreen.RESULTS },
-                    onContinue = {
-                        bookingViewModel.initializePayment()
-                        currentScreen = WasmScreen.PAYMENT
-                    }
-                )
-            }
-            WasmScreen.PAYMENT -> {
-                WasmPaymentScreenContainer(
-                    viewModel = bookingViewModel,
-                    localizationState = localizationState,
-                    authToken = authToken,
-                    onBack = { currentScreen = WasmScreen.PASSENGERS },
-                    onSuccess = {
-                        bookingViewModel.initializeConfirmation()
-                        currentScreen = WasmScreen.CONFIRMATION
-                    }
-                )
-            }
-            WasmScreen.CONFIRMATION -> {
-                WasmConfirmationScreenContainer(
-                    viewModel = bookingViewModel,
-                    localizationState = localizationState,
-                    onNewBooking = {
-                        bookingViewModel.resetForNewBooking()
-                        searchViewModel.retry()
-                        currentScreen = WasmScreen.SEARCH
-                    }
-                )
-            }
-            WasmScreen.SETTINGS -> {
-                WasmSettingsScreen(
-                    localizationState = localizationState,
-                    onBack = { currentScreen = previousScreen }
-                )
-            }
-            WasmScreen.SAVED_BOOKINGS -> {
-                WasmSavedBookingsScreen(
-                    authToken = authToken,
-                    onBack = { currentScreen = WasmScreen.SEARCH }
-                )
-            }
-        }
             }
         }
     }
@@ -1259,12 +1303,14 @@ private fun WasmConfirmationScreenContainer(
                             color = VelocityColors.TextMuted
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = state.pnr,
-                            style = VelocityTheme.typography.heroTitle,
-                            color = VelocityColors.Accent,
-                            fontWeight = FontWeight.Bold
-                        )
+                        SelectionContainer {
+                            Text(
+                                text = state.pnr,
+                                style = VelocityTheme.typography.heroTitle,
+                                color = VelocityColors.Accent,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Save this reference for managing your booking",
@@ -1622,6 +1668,7 @@ private fun LanguageOption(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
+            .pointerHoverIcon(PointerIcon.Hand)
             .clickable(onClick = onClick)
             .padding(12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1644,23 +1691,28 @@ private fun LanguageOption(
 @Composable
 private fun WasmSavedBookingsScreen(
     authToken: String?,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onTokenExpired: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     val apiClient = koinInject<FairairApiClient>()
     var bookings by remember { mutableStateOf<List<com.fairair.app.api.BookingConfirmationDto>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isUnauthorized by remember { mutableStateOf(false) }
     
     // Fetch bookings on first composition
     LaunchedEffect(authToken) {
         if (authToken == null) {
             isLoading = false
+            isUnauthorized = true
             errorMessage = "Please log in to see your bookings"
             return@LaunchedEffect
         }
         
         isLoading = true
         errorMessage = null
+        isUnauthorized = false
         
         when (val result = apiClient.getMyBookings(authToken)) {
             is com.fairair.app.api.ApiResult.Success -> {
@@ -1668,7 +1720,14 @@ private fun WasmSavedBookingsScreen(
                 isLoading = false
             }
             is com.fairair.app.api.ApiResult.Error -> {
-                errorMessage = result.message
+                // Check if it's an auth error (401)
+                if (result.code == "HTTP_401" || result.message.contains("expired", ignoreCase = true) || result.message.contains("unauthorized", ignoreCase = true)) {
+                    isUnauthorized = true
+                    onTokenExpired() // Clear the invalid token
+                    errorMessage = "Your session has expired. Please log in again."
+                } else {
+                    errorMessage = result.message
+                }
                 isLoading = false
             }
         }
@@ -1684,7 +1743,8 @@ private fun WasmSavedBookingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .background(VelocityColors.BackgroundMid)
+                    .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
@@ -1694,10 +1754,10 @@ private fun WasmSavedBookingsScreen(
                         tint = VelocityColors.TextMain
                     )
                 }
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "My Bookings",
-                    style = VelocityTheme.typography.timeBig,
-                    modifier = Modifier.padding(start = 8.dp)
+                    style = VelocityTheme.typography.timeBig
                 )
             }
 
@@ -1717,10 +1777,10 @@ private fun WasmSavedBookingsScreen(
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Warning,
+                                imageVector = if (isUnauthorized) Icons.Default.Person else Icons.Default.Warning,
                                 contentDescription = null,
                                 tint = VelocityColors.TextMuted,
                                 modifier = Modifier.size(48.dp)
@@ -1728,8 +1788,20 @@ private fun WasmSavedBookingsScreen(
                             Text(
                                 text = errorMessage ?: "Error loading bookings",
                                 style = VelocityTheme.typography.body,
-                                color = VelocityColors.TextMuted
+                                color = VelocityColors.TextMuted,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 32.dp)
                             )
+                            if (isUnauthorized) {
+                                Button(
+                                    onClick = onNavigateToLogin,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = VelocityColors.Accent
+                                    )
+                                ) {
+                                    Text("Log In", color = Color.White)
+                                }
+                            }
                         }
                     }
                 }
@@ -1798,11 +1870,13 @@ private fun BookingCard(booking: com.fairair.app.api.BookingConfirmationDto) {
                         style = VelocityTheme.typography.duration,
                         color = VelocityColors.TextMuted
                     )
-                    Text(
-                        text = booking.pnr,
-                        style = VelocityTheme.typography.timeBig,
-                        color = VelocityColors.TextMain
-                    )
+                    SelectionContainer {
+                        Text(
+                            text = booking.pnr,
+                            style = VelocityTheme.typography.timeBig,
+                            color = VelocityColors.TextMain
+                        )
+                    }
                 }
                 
                 // Status badge
@@ -1842,11 +1916,13 @@ private fun BookingCard(booking: com.fairair.app.api.BookingConfirmationDto) {
                         style = VelocityTheme.typography.duration,
                         color = VelocityColors.TextMuted
                     )
-                    Text(
-                        text = booking.bookingReference,
-                        style = VelocityTheme.typography.body,
-                        color = VelocityColors.TextMain
-                    )
+                    SelectionContainer {
+                        Text(
+                            text = booking.bookingReference,
+                            style = VelocityTheme.typography.body,
+                            color = VelocityColors.TextMain
+                        )
+                    }
                 }
             }
             

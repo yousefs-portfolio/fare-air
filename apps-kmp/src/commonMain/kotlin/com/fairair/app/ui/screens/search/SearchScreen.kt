@@ -2,6 +2,8 @@ package com.fairair.app.ui.screens.search
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
@@ -378,6 +380,7 @@ private fun AirportSelector(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
+            .pointerHoverIcon(PointerIcon.Hand)
             .clickable(onClick = onClick)
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -418,6 +421,7 @@ private fun DateSelectionCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .pointerHoverIcon(PointerIcon.Hand)
                 .clickable { /* Show date picker */ },
             verticalAlignment = Alignment.CenterVertically
         ) {

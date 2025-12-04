@@ -3,6 +3,8 @@ package com.fairair.app.ui.screens.saved
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -255,6 +257,7 @@ private fun SavedBookingCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .pointerHoverIcon(PointerIcon.Hand)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = VelocityColors.GlassBg,
@@ -348,6 +351,7 @@ private fun SavedBookingCard(
             Row(
                 modifier = Modifier
                     .align(Alignment.End)
+                    .pointerHoverIcon(PointerIcon.Hand)
                     .clickable { showDeleteConfirm = true }
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically

@@ -33,7 +33,7 @@ class AuthController(
      * Authenticates a user and returns access/refresh tokens.
      */
     @PostMapping("/login")
-    fun login(@RequestBody request: LoginRequestDto): ResponseEntity<Any> {
+    suspend fun login(@RequestBody request: LoginRequestDto): ResponseEntity<Any> {
         log.info("Login attempt for email: ${request.email}")
         
         if (!isValidEmail(request.email)) {
@@ -41,7 +41,7 @@ class AuthController(
                 .body(AuthErrorResponseDto("INVALID_EMAIL", "Invalid email format"))
         }
         
-        // Validate credentials against demo users
+        // Validate credentials against database
         val user = userService.validateCredentials(request.email, request.password)
         
         if (user == null) {

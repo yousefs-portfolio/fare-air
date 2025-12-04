@@ -1,6 +1,7 @@
 package com.fairair.app.persistence
 
 import com.fairair.app.api.BookingConfirmationDto
+import com.fairair.contract.dto.UserInfoDto
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,8 +53,58 @@ class LocalStorage(
         private const val KEY_ROUTE_CACHE = "route_cache"
         private const val KEY_ROUTE_CACHE_TIMESTAMP = "route_cache_timestamp"
         private const val KEY_SEARCH_HISTORY = "search_history"
+        private const val KEY_AUTH_TOKEN = "auth_token"
+        private const val KEY_CURRENT_USER = "current_user"
         private const val ROUTE_CACHE_TTL_MS = 24 * 60 * 60 * 1000L // 24 hours
         private const val MAX_SEARCH_HISTORY = 10
+    }
+
+    // ============ Authentication ============
+
+    /**
+     * Saves the auth token to local storage.
+     */
+    fun saveAuthToken(token: String) {
+        settings.putString(KEY_AUTH_TOKEN, token)
+    }
+
+    /**
+     * Gets the stored auth token.
+     * Returns null if not logged in.
+     */
+    fun getAuthToken(): String? {
+        val token = settings.getString(KEY_AUTH_TOKEN, "")
+        return token.ifEmpty { null }
+    }
+
+    /**
+     * Saves the current user to local storage.
+     */
+    fun saveCurrentUser(user: UserInfoDto) {
+        val jsonString = json.encodeToString(user)
+        settings.putString(KEY_CURRENT_USER, jsonString)
+    }
+
+    /**
+     * Gets the stored current user.
+     * Returns null if not logged in.
+     */
+    fun getCurrentUser(): UserInfoDto? {
+        val jsonString = settings.getString(KEY_CURRENT_USER, "")
+        if (jsonString.isEmpty()) return null
+        return try {
+            json.decodeFromString(jsonString)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Clears auth data (logout).
+     */
+    fun clearAuth() {
+        settings.remove(KEY_AUTH_TOKEN)
+        settings.remove(KEY_CURRENT_USER)
     }
 
     // ============ Saved Bookings ============

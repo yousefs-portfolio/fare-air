@@ -11,6 +11,14 @@ dependencies {
     implementation(libs.spring.boot.starter.webflux)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.security)
+    
+    // Spring Data R2DBC for reactive database access
+    implementation(libs.spring.boot.starter.data.r2dbc)
+    
+    // H2 Database with R2DBC (file-based mode for persistence)
+    // To swap to PostgreSQL: replace with r2dbc-postgresql
+    implementation(libs.r2dbc.h2)
+    runtimeOnly(libs.h2.database)
 
     // Kotlin
     implementation(libs.kotlin.stdlib)

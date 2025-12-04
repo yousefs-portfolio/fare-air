@@ -1,67 +1,49 @@
 package com.fairair.service
 
+import com.fairair.entity.UserEntity
+import com.fairair.repository.UserRepository
+import kotlinx.coroutines.flow.toList
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
-import jakarta.annotation.PostConstruct
 
 /**
- * User service for managing demo users.
- * In production, this would use a database.
+ * User service for managing users.
+ * Uses database-backed storage via Spring Data R2DBC.
+ * 
+ * Demo users are seeded via data.sql on startup.
  */
 @Service
-class UserService {
+class UserService(
+    private val userRepository: UserRepository
+) {
 
     private val passwordEncoder = BCryptPasswordEncoder()
-    private val users = mutableMapOf<String, DemoUser>()
 
-    @PostConstruct
-    fun initDemoUsers() {
-        // Create 3 demo users
-        val hashedPassword = passwordEncoder.encode("password")
-        
-        // Use lowercase keys for consistent lookup
-        users["employee@fairair.com".lowercase()] = DemoUser(
-            id = "user-001",
-            email = "employee@fairair.com",
-            password = hashedPassword,
-            firstName = "John",
-            lastName = "Smith",
-            role = UserRole.EMPLOYEE
-        )
-        
-        users["jane@test.com".lowercase()] = DemoUser(
-            id = "user-002",
-            email = "jane@test.com",
-            password = hashedPassword,
-            firstName = "Jane",
-            lastName = "Doe",
-            role = UserRole.USER
-        )
-        
-        users["admin@test.com".lowercase()] = DemoUser(
-            id = "user-003",
-            email = "admin@test.com",
-            password = hashedPassword,
-            firstName = "Admin",
-            lastName = "User",
-            role = UserRole.ADMIN
-        )
+    suspend fun findByEmail(email: String): DemoUser? {
+        return userRepository.findByEmailIgnoreCase(email)?.toDemoUser()
     }
 
-    fun findByEmail(email: String): DemoUser? {
-        return users[email.lowercase()]
-    }
-
-    fun validateCredentials(email: String, password: String): DemoUser? {
-        val user = findByEmail(email.lowercase()) ?: return null
-        return if (passwordEncoder.matches(password, user.password)) {
-            user
+    suspend fun validateCredentials(email: String, password: String): DemoUser? {
+        val user = userRepository.findByEmailIgnoreCase(email) ?: return null
+        return if (passwordEncoder.matches(password, user.passwordHash)) {
+            user.toDemoUser()
         } else {
             null
         }
     }
 
-    fun getAllUsers(): List<DemoUser> = users.values.toList()
+    suspend fun getAllUsers(): List<DemoUser> {
+        return userRepository.findAll().toList().map { it.toDemoUser() }
+    }
+    
+    private fun UserEntity.toDemoUser() = DemoUser(
+        id = id,
+        email = email,
+        password = passwordHash,
+        firstName = firstName,
+        lastName = lastName,
+        role = UserRole.valueOf(role)
+    )
 }
 
 /**

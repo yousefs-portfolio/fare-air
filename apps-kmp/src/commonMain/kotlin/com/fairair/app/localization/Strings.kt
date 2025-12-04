@@ -188,6 +188,9 @@ interface AppStrings {
     val landingFooterTerms: String
     val landingFooterCopyright: String
     val landingFooterPortfolio: String
+    val landingSignOut: String
+    val landingMyBookings: String
+    val landingWelcome: String
 }
 
 /**
@@ -378,6 +381,9 @@ object EnglishStrings : AppStrings {
     override val landingFooterTerms = "Terms"
     override val landingFooterCopyright = "© 2024 FairAir. All rights reserved."
     override val landingFooterPortfolio = "A portfolio project"
+    override val landingSignOut = "Sign Out"
+    override val landingMyBookings = "My Bookings"
+    override val landingWelcome = "Welcome"
 }
 
 /**
@@ -568,6 +574,9 @@ object ArabicStrings : AppStrings {
     override val landingFooterTerms = "الشروط"
     override val landingFooterCopyright = "© ٢٠٢٤ فير إير. جميع الحقوق محفوظة."
     override val landingFooterPortfolio = "مشروع محفظة أعمال"
+    override val landingSignOut = "تسجيل الخروج"
+    override val landingMyBookings = "حجوزاتي"
+    override val landingWelcome = "مرحباً"
 }
 
 /**

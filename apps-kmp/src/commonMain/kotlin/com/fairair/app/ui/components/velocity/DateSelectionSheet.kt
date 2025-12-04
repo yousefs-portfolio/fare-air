@@ -2,6 +2,8 @@ package com.fairair.app.ui.components.velocity
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -216,6 +218,7 @@ private fun DayCell(
             .padding(4.dp)
             .clip(CircleShape)
             .background(backgroundColor)
+            .pointerHoverIcon(if (!isPast) PointerIcon.Hand else PointerIcon.Default)
             .clickable(enabled = !isPast, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {

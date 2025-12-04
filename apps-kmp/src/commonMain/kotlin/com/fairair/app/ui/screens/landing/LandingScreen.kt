@@ -6,9 +6,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,18 +34,24 @@ private val MaxCardWidth = 800.dp
  * 
  * @param onFlyNowClick Called when the main CTA is clicked
  * @param onLoginClick Called when sign in is clicked
+ * @param onLogoutClick Called when sign out is clicked
+ * @param onMyBookingsClick Called when my bookings is clicked
  * @param onSettingsClick Called when settings is clicked
  * @param onDealClick Called when a deal is clicked, with origin and destination codes
  * @param onDestinationClick Called when a destination is clicked, with destination code
+ * @param userName The logged in user's name, or null if not logged in
  * @param isRtl Whether to use RTL layout
  */
 @Composable
 fun LandingScreen(
     onFlyNowClick: () -> Unit,
     onLoginClick: () -> Unit,
+    onLogoutClick: () -> Unit = {},
+    onMyBookingsClick: () -> Unit = {},
     onSettingsClick: () -> Unit,
     onDealClick: ((origin: String, destination: String) -> Unit)? = null,
     onDestinationClick: ((destination: String) -> Unit)? = null,
+    userName: String? = null,
     isRtl: Boolean = false
 ) {
     val scrollState = rememberScrollState()
@@ -61,7 +70,10 @@ fun LandingScreen(
             // Header - full width but content constrained
             LandingHeader(
                 onLoginClick = onLoginClick,
-                onSettingsClick = onSettingsClick
+                onLogoutClick = onLogoutClick,
+                onMyBookingsClick = onMyBookingsClick,
+                onSettingsClick = onSettingsClick,
+                userName = userName
             )
             
             // Hero Section
@@ -93,9 +105,14 @@ fun LandingScreen(
 @Composable
 private fun LandingHeader(
     onLoginClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onMyBookingsClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    userName: String?
 ) {
     val strings = LocalStrings.current
+    val isLoggedIn = userName != null
+    
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
@@ -126,28 +143,77 @@ private fun LandingHeader(
             }
             
             // Nav buttons
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onSettingsClick) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = strings.settings,
-                        tint = VelocityColors.TextMuted
-                    )
-                }
-                
-                Button(
-                    onClick = onLoginClick,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = VelocityColors.TextMain
-                    ),
-                    border = BorderStroke(1.dp, VelocityColors.GlassBorder),
-                    shape = RoundedCornerShape(8.dp)
+            DisableSelection {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(strings.landingSignIn)
+                    IconButton(
+                        onClick = onSettingsClick,
+                        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = strings.settings,
+                            tint = VelocityColors.TextMuted
+                        )
+                    }
+                    
+                    if (isLoggedIn) {
+                        // Welcome message
+                        Text(
+                            text = "${strings.landingWelcome}, $userName",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = VelocityColors.TextMuted
+                        )
+                        
+                        // My Bookings button
+                        Button(
+                            onClick = onMyBookingsClick,
+                            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = VelocityColors.Accent.copy(alpha = 0.1f),
+                                contentColor = VelocityColors.Accent
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(strings.landingMyBookings)
+                        }
+                        
+                        // Sign Out button
+                        Button(
+                            onClick = onLogoutClick,
+                            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = VelocityColors.TextMain
+                            ),
+                            border = BorderStroke(1.dp, VelocityColors.GlassBorder),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(strings.landingSignOut)
+                        }
+                    } else {
+                        // Sign In button
+                        Button(
+                            onClick = onLoginClick,
+                            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = VelocityColors.TextMain
+                            ),
+                            border = BorderStroke(1.dp, VelocityColors.GlassBorder),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(strings.landingSignIn)
+                        }
+                    }
                 }
             }
         }
@@ -200,26 +266,28 @@ private fun HeroSection(onFlyNowClick: () -> Unit) {
             Spacer(modifier = Modifier.height(40.dp))
             
             // Fly Now Button
-            Button(
-                onClick = onFlyNowClick,
-                modifier = Modifier.height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = VelocityColors.Accent,
-                    contentColor = VelocityColors.BackgroundDeep
-                ),
-                shape = RoundedCornerShape(28.dp),
-                contentPadding = PaddingValues(horizontal = 48.dp)
-            ) {
-                Text(
-                    text = strings.landingSearchFlights,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = null
-                )
+            DisableSelection {
+                Button(
+                    onClick = onFlyNowClick,
+                    modifier = Modifier.height(56.dp).pointerHoverIcon(PointerIcon.Hand),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = VelocityColors.Accent,
+                        contentColor = VelocityColors.BackgroundDeep
+                    ),
+                    shape = RoundedCornerShape(28.dp),
+                    contentPadding = PaddingValues(horizontal = 48.dp)
+                ) {
+                    Text(
+                        text = strings.landingSearchFlights,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -281,34 +349,35 @@ private fun DealCard(
         "popular" -> strings.landingPopular
         else -> deal.badgeKey
     }
-    Surface(
-        modifier = Modifier
-            .width(300.dp)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        shape = RoundedCornerShape(16.dp),
-        color = VelocityColors.BackgroundMid,
-        border = BorderStroke(1.dp, VelocityColors.GlassBorder)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
+    DisableSelection {
+        Surface(
+            modifier = Modifier
+                .width(300.dp)
+                .then(if (onClick != null) Modifier.pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onClick) else Modifier),
+            shape = RoundedCornerShape(16.dp),
+            color = VelocityColors.BackgroundMid,
+            border = BorderStroke(1.dp, VelocityColors.GlassBorder)
         ) {
-            // Badge
-            Surface(
-                shape = RoundedCornerShape(4.dp),
-                color = deal.badgeColor.copy(alpha = 0.15f)
+            Column(
+                modifier = Modifier.padding(20.dp)
             ) {
-                Text(
-                    text = badgeText,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = deal.badgeColor,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Route
+                // Badge
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = deal.badgeColor.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = badgeText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = deal.badgeColor,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Route
             Text(
                 text = "${deal.originCity} to ${deal.destinationCity}",
                 style = MaterialTheme.typography.titleMedium,
@@ -346,6 +415,7 @@ private fun DealCard(
                 }
             }
         }
+    }
     }
 }
 
@@ -389,50 +459,52 @@ private fun DestinationCard(
     destination: Destination,
     onClick: (() -> Unit)?
 ) {
-    Surface(
-        modifier = Modifier
-            .width(140.dp)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        shape = RoundedCornerShape(12.dp),
-        color = VelocityColors.BackgroundMid,
-        border = BorderStroke(1.dp, VelocityColors.GlassBorder)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+    DisableSelection {
+        Surface(
+            modifier = Modifier
+                .width(140.dp)
+                .then(if (onClick != null) Modifier.pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onClick) else Modifier),
+            shape = RoundedCornerShape(12.dp),
+            color = VelocityColors.BackgroundMid,
+            border = BorderStroke(1.dp, VelocityColors.GlassBorder)
         ) {
-            // City code in accent circle
-            Surface(
-                modifier = Modifier.size(56.dp),
-                shape = CircleShape,
-                color = VelocityColors.Accent.copy(alpha = 0.1f)
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = destination.code,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = VelocityColors.Accent,
-                        fontWeight = FontWeight.Bold
-                    )
+                // City code in accent circle
+                Surface(
+                    modifier = Modifier.size(56.dp),
+                    shape = CircleShape,
+                    color = VelocityColors.Accent.copy(alpha = 0.1f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = destination.code,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = VelocityColors.Accent,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Text(
+                    text = destination.city,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = VelocityColors.TextMain,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center
+                )
+                
+                Text(
+                    text = destination.country,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = VelocityColors.TextMuted,
+                    textAlign = TextAlign.Center
+                )
             }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            Text(
-                text = destination.city,
-                style = MaterialTheme.typography.bodyMedium,
-                color = VelocityColors.TextMain,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center
-            )
-            
-            Text(
-                text = destination.country,
-                style = MaterialTheme.typography.bodySmall,
-                color = VelocityColors.TextMuted,
-                textAlign = TextAlign.Center
-            )
         }
     }
 }
@@ -656,12 +728,14 @@ private fun LandingFooter() {
 
 @Composable
 private fun FooterLink(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodySmall,
-        color = VelocityColors.TextMuted,
-        modifier = Modifier.clickable { /* placeholder */ }
-    )
+    DisableSelection {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = VelocityColors.TextMuted,
+            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand).clickable { /* placeholder */ }
+        )
+    }
 }
 
 // Data classes and sample data
