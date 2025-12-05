@@ -73,6 +73,21 @@ class SecurityConfig(
                     .pathMatchers("/api/v1/content", "/api/v1/content/**").permitAll()
                     .pathMatchers(HttpMethod.GET, "/api/v1/membership/plans").permitAll()
                     
+                    // Admin endpoints (admin auth is handled separately)
+                    .pathMatchers("/api/admin/auth/**").permitAll()
+                    .pathMatchers("/api/admin/**").permitAll() // TODO: Add proper admin auth
+                    
+                    // B2B endpoints (B2B auth is handled separately)
+                    .pathMatchers("/api/b2b/auth/**").permitAll()
+                    .pathMatchers("/api/b2b/**").permitAll() // TODO: Add proper B2B auth
+                    
+                    // Public content API
+                    .pathMatchers("/api/content/**").permitAll()
+                    
+                    // Public group booking and charter request endpoints
+                    .pathMatchers("/api/group-bookings/**").permitAll()
+                    .pathMatchers("/api/charter/**").permitAll()
+                    
                     // Allow OPTIONS for CORS preflight
                     .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     

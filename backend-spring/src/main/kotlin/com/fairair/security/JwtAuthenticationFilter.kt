@@ -65,7 +65,21 @@ class JwtAuthenticationFilter(
             "/api/v1/manage/",
             "/api/v1/seats/",
             "/api/v1/meals/",
-            "/api/v1/content/"
+            "/api/v1/content/",
+            // Admin endpoints (admin has its own auth)
+            "/api/admin/",
+            "/api/admin",
+            // B2B endpoints (B2B has its own auth)
+            "/api/b2b/",
+            "/api/b2b",
+            // Public content API
+            "/api/content/",
+            "/api/content",
+            // Public group booking and charter requests
+            "/api/group-bookings/",
+            "/api/group-bookings",
+            "/api/charter/",
+            "/api/charter"
         )
         
         /**
