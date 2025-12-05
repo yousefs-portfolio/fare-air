@@ -230,21 +230,23 @@ private fun WasmAppContent() {
             ) {
                 // Results screen is full-width (no max width constraint)
                 if (currentScreen == WasmScreen.RESULTS) {
-                    WasmResultsScreenContainer(
-                        viewModel = bookingViewModel,
-                        localizationState = localizationState,
-                        isEmployee = isEmployee,
-                        onBack = { navigateBack() },
-                        onContinue = {
-                            if (isEmployee) {
-                                bookingViewModel.initializePassengerForms()
-                                currentScreen = WasmScreen.PASSENGERS
-                            } else {
-                                bookingViewModel.initializeSeatSelection()
-                                currentScreen = WasmScreen.SEAT_SELECTION
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        WasmResultsScreenContainer(
+                            viewModel = bookingViewModel,
+                            localizationState = localizationState,
+                            isEmployee = isEmployee,
+                            onBack = { navigateBack() },
+                            onContinue = {
+                                if (isEmployee) {
+                                    bookingViewModel.initializePassengerForms()
+                                    currentScreen = WasmScreen.PASSENGERS
+                                } else {
+                                    bookingViewModel.initializeSeatSelection()
+                                    currentScreen = WasmScreen.SEAT_SELECTION
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 } else {
                     // All other screens have max width constraint
                     Box(
