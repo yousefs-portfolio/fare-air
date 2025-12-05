@@ -228,36 +228,54 @@ private fun WasmAppContent() {
                     ),
                 contentAlignment = Alignment.TopCenter
             ) {
-                // Desktop-aware wrapper - constrains content width on wide screens
-                Box(
-                    modifier = Modifier
-                        .widthIn(max = MaxContentWidth)
-                        .fillMaxSize()
-                ) {
-                    when (currentScreen) {
-                        WasmScreen.LANDING -> {
-                            // Landing has its own max width handling
-                            Box(modifier = Modifier.widthIn(max = 1200.dp)) {
-                                LandingScreen(
-                                    onFlyNowClick = { currentScreen = WasmScreen.SEARCH },
-                                    onLoginClick = { currentScreen = WasmScreen.LOGIN },
-                                    onLogoutClick = {
-                                        localStorage.clearAuth()
-                                        currentUser = null
-                                        authToken = null
-                                    },
-                            onMyBookingsClick = { currentScreen = WasmScreen.SAVED_BOOKINGS },
-                            onSettingsClick = {
-                                previousScreen = WasmScreen.LANDING
-                                currentScreen = WasmScreen.SETTINGS
-                            },
-                            onCheckInClick = {
-                                previousScreen = WasmScreen.LANDING
-                                currentScreen = WasmScreen.CHECK_IN
-                            },
-                            onManageBookingClick = {
-                                previousScreen = WasmScreen.LANDING
-                                currentScreen = WasmScreen.MANAGE_BOOKING
+                // Results screen is full-width (no max width constraint)
+                if (currentScreen == WasmScreen.RESULTS) {
+                    WasmResultsScreenContainer(
+                        viewModel = bookingViewModel,
+                        localizationState = localizationState,
+                        isEmployee = isEmployee,
+                        onBack = { navigateBack() },
+                        onContinue = {
+                            if (isEmployee) {
+                                bookingViewModel.initializePassengerForms()
+                                currentScreen = WasmScreen.PASSENGERS
+                            } else {
+                                bookingViewModel.initializeSeatSelection()
+                                currentScreen = WasmScreen.SEAT_SELECTION
+                            }
+                        }
+                    )
+                } else {
+                    // All other screens have max width constraint
+                    Box(
+                        modifier = Modifier
+                            .widthIn(max = MaxContentWidth)
+                            .fillMaxSize()
+                    ) {
+                        when (currentScreen) {
+                            WasmScreen.LANDING -> {
+                                // Landing has its own max width handling
+                                Box(modifier = Modifier.widthIn(max = 1200.dp)) {
+                                    LandingScreen(
+                                        onFlyNowClick = { currentScreen = WasmScreen.SEARCH },
+                                        onLoginClick = { currentScreen = WasmScreen.LOGIN },
+                                        onLogoutClick = {
+                                            localStorage.clearAuth()
+                                            currentUser = null
+                                            authToken = null
+                                        },
+                                onMyBookingsClick = { currentScreen = WasmScreen.SAVED_BOOKINGS },
+                                onSettingsClick = {
+                                    previousScreen = WasmScreen.LANDING
+                                    currentScreen = WasmScreen.SETTINGS
+                                },
+                                onCheckInClick = {
+                                    previousScreen = WasmScreen.LANDING
+                                    currentScreen = WasmScreen.CHECK_IN
+                                },
+                                onManageBookingClick = {
+                                    previousScreen = WasmScreen.LANDING
+                                    currentScreen = WasmScreen.MANAGE_BOOKING
                             },
                             onMembershipClick = {
                                 previousScreen = WasmScreen.LANDING
@@ -320,23 +338,7 @@ private fun WasmAppContent() {
                     )
                 }
                 WasmScreen.RESULTS -> {
-                    WasmResultsScreenContainer(
-                        viewModel = bookingViewModel,
-                        localizationState = localizationState,
-                        isEmployee = isEmployee,
-                        onBack = { navigateBack() },
-                        onContinue = {
-                            if (isEmployee) {
-                                // Employees skip seat selection
-                                bookingViewModel.initializePassengerForms()
-                                currentScreen = WasmScreen.PASSENGERS
-                            } else {
-                                // Non-employees go to seat selection
-                                bookingViewModel.initializeSeatSelection()
-                                currentScreen = WasmScreen.SEAT_SELECTION
-                            }
-                        }
-                    )
+                    // Handled above (full-width, outside max-width wrapper)
                 }
                 WasmScreen.SEAT_SELECTION -> {
                     WasmSeatSelectionScreen(
@@ -425,15 +427,16 @@ private fun WasmAppContent() {
                         onNavigateToLogin = { currentScreen = WasmScreen.LOGIN }
                     )
                 }
-                WasmScreen.HELP -> {
-                    com.fairair.app.ui.screens.help.HelpScreen(
-                        onBack = { navigateBack() },
-                        onContactUs = {
-                            com.fairair.app.util.UrlOpener.openUrl(
-                                com.fairair.app.util.ExternalLinks.buildContactUrl()
-                            )
-                        }
-                    )
+                            WasmScreen.HELP -> {
+                                com.fairair.app.ui.screens.help.HelpScreen(
+                                    onBack = { navigateBack() },
+                                    onContactUs = {
+                                        com.fairair.app.util.UrlOpener.openUrl(
+                                            com.fairair.app.util.ExternalLinks.buildContactUrl()
+                                        )
+                                    }
+                                )
+                            }
                         }
                     }
                 }
