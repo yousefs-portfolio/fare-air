@@ -476,6 +476,7 @@ private fun WasmSearchScreenContainer(
                 onOriginSelect = viewModel::selectVelocityOrigin,
                 onDestinationSelect = viewModel::selectVelocityDestination,
                 onDateSelect = viewModel::selectVelocityDate,
+                onReturnDateSelect = viewModel::selectVelocityReturnDate,
                 onPassengerSelect = viewModel::setVelocityPassengerCount,
                 onFieldActivate = viewModel::setActiveField,
                 onTripTypeChange = viewModel::setTripType,
