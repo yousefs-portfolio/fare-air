@@ -68,7 +68,7 @@ import org.koin.compose.KoinContext
 import org.koin.compose.koinInject
 
 // Max width for content on desktop - keeps screens readable on wide monitors
-private val MaxContentWidth = 900.dp
+private val MaxContentWidth = 1200.dp
 
 /**
  * Wasm-specific application entry point that bypasses Voyager Navigator.
@@ -478,6 +478,7 @@ private fun WasmSearchScreenContainer(
                 onDateSelect = viewModel::selectVelocityDate,
                 onPassengerSelect = viewModel::setVelocityPassengerCount,
                 onFieldActivate = viewModel::setActiveField,
+                onTripTypeChange = viewModel::setTripType,
                 onSearch = {
                     viewModel.searchFromVelocity {
                         onNavigateToResults()
