@@ -117,22 +117,22 @@ private external fun jsLocationError(result: JsLocationResult): String
 external interface JsIpLocationResult : JsAny
 
 /**
- * Fetch location from IP using ip-api.com (free, no API key needed).
+ * Fetch location from IP using ipapi.co (free tier, HTTPS, no API key needed).
  */
 @JsFun("""
-() => fetch('http://ip-api.com/json/?fields=status,lat,lon,city,countryCode')
+() => fetch('https://ipapi.co/json/')
     .then(r => r.json())
-    .catch(() => ({ status: 'fail' }))
+    .catch(() => ({ error: true }))
 """)
 private external fun jsGetIpLocation(): Promise<JsIpLocationResult>
 
-@JsFun("(result) => result.status === 'success'")
+@JsFun("(result) => !result.error && result.latitude !== undefined")
 private external fun jsIpLocationSuccess(result: JsIpLocationResult): Boolean
 
-@JsFun("(result) => result.lat || 0")
+@JsFun("(result) => result.latitude || 0")
 private external fun jsIpLocationLatitude(result: JsIpLocationResult): Double
 
-@JsFun("(result) => result.lon || 0")
+@JsFun("(result) => result.longitude || 0")
 private external fun jsIpLocationLongitude(result: JsIpLocationResult): Double
 
 @JsFun("(result) => result.city || ''")
