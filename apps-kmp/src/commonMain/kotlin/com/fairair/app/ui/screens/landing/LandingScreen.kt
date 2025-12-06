@@ -46,6 +46,8 @@ private val MaxCardWidth = 800.dp
  * @param onDealClick Called when a deal is clicked, with origin and destination codes
  * @param onDestinationClick Called when a destination is clicked, with destination code
  * @param userName The logged in user's name, or null if not logged in
+ * @param userOriginCity The user's detected origin city name (e.g., "Jeddah")
+ * @param popularDestinationCodes List of destination codes to show as popular (based on user's origin)
  * @param isRtl Whether to use RTL layout
  */
 @Composable
@@ -64,9 +66,20 @@ fun LandingScreen(
     onDealClick: ((origin: String, destination: String) -> Unit)? = null,
     onDestinationClick: ((destination: String) -> Unit)? = null,
     userName: String? = null,
+    userOriginCity: String? = null,
+    popularDestinationCodes: List<String>? = null,
     isRtl: Boolean = false
 ) {
     val scrollState = rememberScrollState()
+    
+    // Filter destinations based on provided codes, or use all if not specified
+    val filteredDestinations = remember(popularDestinationCodes) {
+        if (popularDestinationCodes != null) {
+            destinations.filter { it.code in popularDestinationCodes }
+        } else {
+            destinations
+        }
+    }
     
     Box(
         modifier = Modifier
@@ -117,8 +130,12 @@ fun LandingScreen(
             
             Spacer(modifier = Modifier.height(64.dp))
             
-            // Popular Destinations
-            DestinationsSection(onDestinationClick = onDestinationClick)
+            // Popular Destinations (filtered based on user's origin)
+            DestinationsSection(
+                onDestinationClick = onDestinationClick,
+                destinations = filteredDestinations,
+                userOriginCity = userOriginCity
+            )
             
             Spacer(modifier = Modifier.height(64.dp))
             
@@ -165,9 +182,11 @@ private fun LandingHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "✈",
-                    fontSize = 24.sp
+                Icon(
+                    imageVector = Icons.Default.Send,
+                    contentDescription = "FairAir",
+                    tint = VelocityColors.Primary,
+                    modifier = Modifier.size(28.dp)
                 )
                 Text(
                     text = strings.appName,
@@ -641,8 +660,20 @@ private fun DealCard(
 }
 
 @Composable
-private fun DestinationsSection(onDestinationClick: ((String) -> Unit)?) {
+private fun DestinationsSection(
+    onDestinationClick: ((String) -> Unit)?,
+    destinations: List<Destination>,
+    userOriginCity: String? = null
+) {
     val strings = LocalStrings.current
+    
+    // Customize subtitle based on user's origin
+    val subtitle = if (userOriginCity != null) {
+        "Fly from $userOriginCity to these amazing places"
+    } else {
+        strings.landingPopularDestinationsSubtitle
+    }
+    
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -653,7 +684,7 @@ private fun DestinationsSection(onDestinationClick: ((String) -> Unit)?) {
         ) {
             SectionHeader(
                 title = strings.landingPopularDestinations,
-                subtitle = strings.landingPopularDestinationsSubtitle
+                subtitle = subtitle
             )
         }
         
@@ -906,7 +937,12 @@ private fun LandingFooter(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(text = "✈", fontSize = 24.sp)
+                            Icon(
+                                imageVector = Icons.Default.Send,
+                                contentDescription = "FairAir",
+                                tint = VelocityColors.Primary,
+                                modifier = Modifier.size(24.dp)
+                            )
                             Text(
                                 text = strings.appName,
                                 style = MaterialTheme.typography.titleMedium,

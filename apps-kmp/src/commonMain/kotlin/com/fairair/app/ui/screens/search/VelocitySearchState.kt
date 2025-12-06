@@ -145,6 +145,20 @@ data class VelocitySearchState(
         }
 
     /**
+     * Returns a hint about what's missing to enable search.
+     * Returns null if search is enabled.
+     */
+    val searchDisabledHint: String?
+        get() {
+            if (isSearching) return null
+            if (selectedOrigin == null) return "Select departure city"
+            if (selectedDestination == null) return "Select destination"
+            if (departureDate == null) return "Select travel date"
+            if (tripType == TripType.ROUND_TRIP && returnDate == null) return "Select return date"
+            return null
+        }
+
+    /**
      * Formatted departure date for display (e.g., "Dec 01").
      */
     val formattedDate: String

@@ -41,41 +41,14 @@ class WasmSearchViewModel(
     val velocityState: StateFlow<VelocitySearchState> = _velocityState.asStateFlow()
 
     init {
-        loadInitialData()
+        loadInitialDataWithPendingOrigin()
     }
 
     /**
      * Loads stations and routes on init.
      */
     private fun loadInitialData() {
-        scope.launch {
-            _velocityState.update { it.copy(isLoading = true, error = null) }
-
-            val stationsResult = apiClient.getStations()
-            val routesResult = apiClient.getRoutes()
-
-            when {
-                stationsResult is ApiResult.Success && routesResult is ApiResult.Success -> {
-                    _velocityState.update {
-                        it.copy(
-                            isLoading = false,
-                            availableOrigins = stationsResult.data,
-                            routeMap = routesResult.data.routes
-                        )
-                    }
-                }
-                stationsResult is ApiResult.Error -> {
-                    _velocityState.update {
-                        it.copy(isLoading = false, error = stationsResult.toDisplayMessage())
-                    }
-                }
-                routesResult is ApiResult.Error -> {
-                    _velocityState.update {
-                        it.copy(isLoading = false, error = (routesResult as ApiResult.Error).toDisplayMessage())
-                    }
-                }
-            }
-        }
+        loadInitialDataWithPendingOrigin()
     }
 
     /**
@@ -109,6 +82,7 @@ class WasmSearchViewModel(
      * Fetches valid destinations from the backend.
      */
     fun selectVelocityOrigin(station: StationDto) {
+        println("selectVelocityOrigin: Selecting station ${station.code} (${station.city})")
         // Immediately update origin selection with loading state
         _velocityState.update { state ->
             state.copy(
@@ -119,6 +93,7 @@ class WasmSearchViewModel(
                 loadingDestinations = true
             )
         }
+        println("selectVelocityOrigin: State updated, selectedOrigin=${_velocityState.value.selectedOrigin?.code}")
 
         // Fetch valid destinations from backend
         scope.launch {
@@ -416,9 +391,75 @@ class WasmSearchViewModel(
      */
     fun preselectOrigin(code: String) {
         val state = _velocityState.value
+        println("preselectOrigin: Looking for code=$code in ${state.availableOrigins.size} origins")
         val station = state.availableOrigins.find { it.code == code }
         if (station != null) {
+            println("preselectOrigin: Found station ${station.code} (${station.city}), selecting...")
             selectVelocityOrigin(station)
+        } else {
+            println("preselectOrigin: Station not found for code=$code")
+        }
+    }
+
+    /**
+     * Sets the user's detected origin airport code.
+     * This will be used to pre-fill the origin when stations are loaded.
+     * If stations are already loaded, selects the origin immediately.
+     */
+    fun setUserDetectedOrigin(code: String) {
+        println("setUserDetectedOrigin: code=$code")
+        val state = _velocityState.value
+        println("setUserDetectedOrigin: availableOrigins.size=${state.availableOrigins.size}")
+        if (state.availableOrigins.isNotEmpty()) {
+            // Stations already loaded, select immediately
+            println("setUserDetectedOrigin: Stations loaded, calling preselectOrigin")
+            preselectOrigin(code)
+        } else {
+            // Store for later - will be applied when stations load
+            println("setUserDetectedOrigin: Stations not loaded yet, storing pending origin")
+            _pendingOriginCode = code
+        }
+    }
+
+    private var _pendingOriginCode: String? = null
+
+    /**
+     * Loads stations and routes on init.
+     * If a pending origin is set, applies it after loading.
+     */
+    private fun loadInitialDataWithPendingOrigin() {
+        scope.launch {
+            _velocityState.update { it.copy(isLoading = true, error = null) }
+
+            val stationsResult = apiClient.getStations()
+            val routesResult = apiClient.getRoutes()
+
+            when {
+                stationsResult is ApiResult.Success && routesResult is ApiResult.Success -> {
+                    _velocityState.update {
+                        it.copy(
+                            isLoading = false,
+                            availableOrigins = stationsResult.data,
+                            routeMap = routesResult.data.routes
+                        )
+                    }
+                    // Apply pending origin if set
+                    _pendingOriginCode?.let { code ->
+                        preselectOrigin(code)
+                        _pendingOriginCode = null
+                    }
+                }
+                stationsResult is ApiResult.Error -> {
+                    _velocityState.update {
+                        it.copy(isLoading = false, error = stationsResult.toDisplayMessage())
+                    }
+                }
+                routesResult is ApiResult.Error -> {
+                    _velocityState.update {
+                        it.copy(isLoading = false, error = (routesResult as ApiResult.Error).toDisplayMessage())
+                    }
+                }
+            }
         }
     }
 

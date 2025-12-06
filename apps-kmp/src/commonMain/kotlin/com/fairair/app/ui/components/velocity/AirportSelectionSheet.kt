@@ -32,6 +32,8 @@ import com.fairair.app.ui.theme.VelocityTheme
  * @param selectedCode The currently selected airport code, if any
  * @param onSelect Callback when an airport is selected
  * @param onDismiss Callback when the sheet is dismissed
+ * @param isLoading Whether destinations are currently being loaded
+ * @param emptyMessage Message to show when there are no stations available
  */
 @Composable
 fun AirportSelectionSheet(
@@ -39,7 +41,9 @@ fun AirportSelectionSheet(
     stations: List<StationDto>,
     selectedCode: String?,
     onSelect: (StationDto) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    isLoading: Boolean = false,
+    emptyMessage: String? = null
 ) {
     val typography = VelocityTheme.typography
 
@@ -84,20 +88,55 @@ fun AirportSelectionSheet(
                 thickness = 1.dp
             )
 
-            // Airport list
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(vertical = 8.dp)
-            ) {
-                items(stations) { station ->
-                    AirportRow(
-                        station = station,
-                        isSelected = station.code == selectedCode,
-                        onClick = {
-                            onSelect(station)
-                            onDismiss()
+            // Content: Loading, Empty, or Airport list
+            when {
+                isLoading -> {
+                    // Loading state
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = VelocityColors.Accent,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                }
+                stations.isEmpty() && emptyMessage != null -> {
+                    // Empty state with message
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = emptyMessage,
+                            style = typography.body.copy(
+                                color = VelocityColors.TextMuted
+                            )
+                        )
+                    }
+                }
+                else -> {
+                    // Airport list
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        items(stations) { station ->
+                            AirportRow(
+                                station = station,
+                                isSelected = station.code == selectedCode,
+                                onClick = {
+                                    onSelect(station)
+                                    onDismiss()
+                                }
+                            )
                         }
-                    )
+                    }
                 }
             }
         }
@@ -182,7 +221,9 @@ fun AirportSelectionBottomSheet(
     stations: List<StationDto>,
     selectedCode: String?,
     onSelect: (StationDto) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    isLoading: Boolean = false,
+    emptyMessage: String? = null
 ) {
     if (isVisible) {
         ModalBottomSheet(
@@ -204,7 +245,9 @@ fun AirportSelectionBottomSheet(
                 stations = stations,
                 selectedCode = selectedCode,
                 onSelect = onSelect,
-                onDismiss = onDismiss
+                onDismiss = onDismiss,
+                isLoading = isLoading,
+                emptyMessage = emptyMessage
             )
         }
     }

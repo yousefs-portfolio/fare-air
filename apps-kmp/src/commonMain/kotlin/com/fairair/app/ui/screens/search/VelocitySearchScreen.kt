@@ -130,18 +130,29 @@ fun VelocitySearchScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Launch button
-                Box(
+                // Launch button with hint
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 48.dp),
-                    contentAlignment = Alignment.Center
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     LaunchButton(
                         enabled = state.isSearchEnabled,
                         loading = state.isSearching,
                         onClick = onSearch
                     )
+                    
+                    // Show hint when button is disabled
+                    state.searchDisabledHint?.let { hint ->
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = hint,
+                            style = VelocityTheme.typography.labelSmall.copy(
+                                color = VelocityColors.TextMuted
+                            )
+                        )
+                    }
                 }
             }
 
@@ -182,13 +193,19 @@ fun VelocitySearchScreen(
         AirportSelectionBottomSheet(
             isVisible = state.activeField == SearchField.DESTINATION,
             title = strings.selectDestination,
-            stations = state.availableDestinations.ifEmpty { state.availableOrigins },
+            stations = state.availableDestinations,
             selectedCode = state.selectedDestination?.code,
             onSelect = { station ->
                 onDestinationSelect(station)
                 onFieldActivate(null)
             },
-            onDismiss = { onFieldActivate(null) }
+            onDismiss = { onFieldActivate(null) },
+            isLoading = state.loadingDestinations,
+            emptyMessage = if (state.selectedOrigin == null) {
+                "Please select a departure city first"
+            } else {
+                "No destinations available from ${state.selectedOrigin.city}"
+            }
         )
 
         DateSelectionBottomSheet(
