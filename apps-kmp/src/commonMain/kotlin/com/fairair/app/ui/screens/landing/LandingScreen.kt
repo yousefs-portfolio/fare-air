@@ -1074,9 +1074,9 @@ private data class Feature(
 )
 
 private val deals = listOf(
-    Deal("Riyadh", "RUH", "Dubai", "DXB", 199, "flashSale", VelocityColors.Accent, "Dec 15 - Jan 15"),
-    Deal("Jeddah", "JED", "Cairo", "CAI", 249, "percentOff", VelocityColors.Warning, "Flexible dates"),
-    Deal("Dammam", "DMM", "Dubai", "DXB", 149, "newRoute", VelocityColors.Success, "Daily flights"),
+    Deal("Riyadh", "RUH", "Dubai", "DXB", 299, "flashSale", VelocityColors.Accent, "Dec 15 - Jan 15"),
+    Deal("Jeddah", "JED", "Cairo", "CAI", 349, "percentOff", VelocityColors.Warning, "Flexible dates"),
+    Deal("Dammam", "DMM", "Dubai", "DXB", 249, "newRoute", VelocityColors.Success, "Daily flights"),
     Deal("Riyadh", "RUH", "Jeddah", "JED", 179, "popular", Color(0xFF8B5CF6), "Multiple daily")
 )
 

@@ -54,6 +54,7 @@ class MockNavitaireClient(
         simulateDelay()
         log.info("Fetching mock route map")
 
+        // Flyadeal routes - domestic + select international
         return RouteMap(
             routes = mapOf(
                 AirportCode("JED") to listOf(
@@ -62,8 +63,7 @@ class MockNavitaireClient(
                     AirportCode("AHB"),
                     AirportCode("GIZ"),
                     AirportCode("TUU"),
-                    AirportCode("DXB"),
-                    AirportCode("CAI")
+                    AirportCode("CAI")  // JED-CAI but no JED-DXB
                 ),
                 AirportCode("RUH") to listOf(
                     AirportCode("JED"),
@@ -71,13 +71,13 @@ class MockNavitaireClient(
                     AirportCode("AHB"),
                     AirportCode("GIZ"),
                     AirportCode("TUU"),
-                    AirportCode("DXB"),
-                    AirportCode("CAI")
+                    AirportCode("DXB"),  // RUH-DXB
+                    AirportCode("CAI")   // RUH-CAI
                 ),
                 AirportCode("DMM") to listOf(
                     AirportCode("JED"),
                     AirportCode("RUH"),
-                    AirportCode("DXB")
+                    AirportCode("DXB")   // DMM-DXB
                 ),
                 AirportCode("AHB") to listOf(
                     AirportCode("JED"),
@@ -92,7 +92,6 @@ class MockNavitaireClient(
                     AirportCode("RUH")
                 ),
                 AirportCode("DXB") to listOf(
-                    AirportCode("JED"),
                     AirportCode("RUH"),
                     AirportCode("DMM")
                 ),
@@ -108,6 +107,7 @@ class MockNavitaireClient(
         simulateDelay()
         log.info("Fetching mock stations")
 
+        // Saudi domestic + international destinations
         return listOf(
             Station(AirportCode("JED"), "King Abdulaziz International Airport", "Jeddah", "Saudi Arabia"),
             Station(AirportCode("RUH"), "King Khalid International Airport", "Riyadh", "Saudi Arabia"),
@@ -115,7 +115,7 @@ class MockNavitaireClient(
             Station(AirportCode("AHB"), "Abha International Airport", "Abha", "Saudi Arabia"),
             Station(AirportCode("GIZ"), "King Abdullah bin Abdulaziz Airport", "Jazan", "Saudi Arabia"),
             Station(AirportCode("TUU"), "Tabuk Regional Airport", "Tabuk", "Saudi Arabia"),
-            Station(AirportCode("DXB"), "Dubai International Airport", "Dubai", "United Arab Emirates"),
+            Station(AirportCode("DXB"), "Dubai International Airport", "Dubai", "UAE"),
             Station(AirportCode("CAI"), "Cairo International Airport", "Cairo", "Egypt")
         )
     }
@@ -288,8 +288,13 @@ class MockNavitaireClient(
             setOf(origin.value, destination.value) == setOf("JED", "RUH") -> 85
             setOf(origin.value, destination.value) == setOf("JED", "DMM") -> 120
             setOf(origin.value, destination.value) == setOf("RUH", "DMM") -> 65
-            setOf(origin.value, destination.value).contains("DXB") -> 150
-            setOf(origin.value, destination.value).contains("CAI") -> 180
+            setOf(origin.value, destination.value) == setOf("RUH", "DXB") -> 120
+            setOf(origin.value, destination.value) == setOf("DMM", "DXB") -> 90
+            setOf(origin.value, destination.value) == setOf("JED", "CAI") -> 150
+            setOf(origin.value, destination.value) == setOf("RUH", "CAI") -> 180
+            setOf(origin.value, destination.value).contains("AHB") -> 75
+            setOf(origin.value, destination.value).contains("GIZ") -> 80
+            setOf(origin.value, destination.value).contains("TUU") -> 95
             else -> 90
         }
     }
@@ -303,8 +308,13 @@ class MockNavitaireClient(
             setOf(origin.value, destination.value) == setOf("JED", "RUH") -> 350.0
             setOf(origin.value, destination.value) == setOf("JED", "DMM") -> 450.0
             setOf(origin.value, destination.value) == setOf("RUH", "DMM") -> 280.0
-            setOf(origin.value, destination.value).contains("DXB") -> 650.0
-            setOf(origin.value, destination.value).contains("CAI") -> 850.0
+            setOf(origin.value, destination.value) == setOf("RUH", "DXB") -> 650.0
+            setOf(origin.value, destination.value) == setOf("DMM", "DXB") -> 550.0
+            setOf(origin.value, destination.value) == setOf("JED", "CAI") -> 850.0
+            setOf(origin.value, destination.value) == setOf("RUH", "CAI") -> 900.0
+            setOf(origin.value, destination.value).contains("AHB") -> 320.0
+            setOf(origin.value, destination.value).contains("GIZ") -> 340.0
+            setOf(origin.value, destination.value).contains("TUU") -> 380.0
             else -> 400.0
         }
         return basePrice * randomFactor

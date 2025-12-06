@@ -5,6 +5,7 @@ import com.fairair.config.FairairProperties
 import com.fairair.contract.api.ApiRoutes
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -66,6 +67,19 @@ class HealthController(
     @GetMapping("/health/ready")
     fun readiness(): ResponseEntity<ReadinessResponse> {
         return ResponseEntity.ok(ReadinessResponse(status = "UP"))
+    }
+
+    /**
+     * DELETE /health/cache
+     *
+     * Invalidates all caches. Useful for development and testing.
+     * Forces re-fetch of routes, stations, and clears search caches.
+     */
+    @DeleteMapping("/health/cache")
+    fun invalidateCache(): ResponseEntity<Map<String, String>> {
+        log.info("Cache invalidation requested")
+        cacheService.invalidateAll()
+        return ResponseEntity.ok(mapOf("status" to "cache invalidated"))
     }
 
     private fun formatPercent(rate: Double): String {

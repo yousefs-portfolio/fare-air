@@ -51,6 +51,7 @@ import com.fairair.app.localization.LocalizationState
 import com.fairair.app.localization.rememberLocalizationState
 import com.fairair.app.state.BookingFlowState
 import com.fairair.app.persistence.LocalStorage
+import com.fairair.app.ui.components.AirplaneTransition
 import com.fairair.app.ui.screens.results.*
 import com.fairair.app.ui.screens.search.VelocitySearchScreen
 import com.fairair.app.ui.screens.search.VelocitySearchScreenError
@@ -144,6 +145,10 @@ private fun WasmAppContent() {
     var currentScreen by remember { mutableStateOf(parseScreenFromHash()) }
     var previousScreen by remember { mutableStateOf(WasmScreen.LANDING) }
     var isNavigatingBack by remember { mutableStateOf(false) }
+    
+    // Airplane transition state for landing -> search
+    var showAirplaneTransition by remember { mutableStateOf(false) }
+    var pendingSearchNavigation by remember { mutableStateOf(false) }
     
     // Helper function for navigating back - falls back to landing if no history
     fun navigateBack() {
@@ -293,7 +298,7 @@ private fun WasmAppContent() {
             ) {
                 // Search and Results screens are full-width (no max width constraint)
                 // to allow destination background images to fill the screen
-                if (currentScreen == WasmScreen.SEARCH) {
+                if (currentScreen == WasmScreen.SEARCH && !showAirplaneTransition) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         WasmSearchScreenContainer(
                             viewModel = searchViewModel,
@@ -338,7 +343,11 @@ private fun WasmAppContent() {
                         when (currentScreen) {
                             WasmScreen.LANDING -> {
                                 LandingScreen(
-                                    onFlyNowClick = { currentScreen = WasmScreen.SEARCH },
+                                    onFlyNowClick = {
+                                        println("[WasmApp] onFlyNowClick - starting airplane transition to search")
+                                        pendingSearchNavigation = true
+                                        showAirplaneTransition = true
+                                    },
                                     onLoginClick = { currentScreen = WasmScreen.LOGIN },
                                     onLogoutClick = {
                                         localStorage.clearAuth()
@@ -378,7 +387,8 @@ private fun WasmAppContent() {
                                     },
                                     onDealClick = { origin, destination ->
                                         searchViewModel.preselectRoute(origin, destination)
-                                        currentScreen = WasmScreen.SEARCH
+                                        pendingSearchNavigation = true
+                                        showAirplaneTransition = true
                                     },
                                     onDestinationClick = { destination ->
                                         // When clicking a destination, use user's origin if detected
@@ -387,7 +397,8 @@ private fun WasmAppContent() {
                                         } else {
                                             searchViewModel.preselectDestination(destination)
                                         }
-                                        currentScreen = WasmScreen.SEARCH
+                                        pendingSearchNavigation = true
+                                        showAirplaneTransition = true
                                     },
                                     userName = currentUser?.firstName,
                                     userOriginCity = userOriginCity,
@@ -511,6 +522,46 @@ private fun WasmAppContent() {
                             }
                         }
                     }
+                }
+                
+                // Airplane transition overlay - rendered LAST so it appears on top
+                if (showAirplaneTransition) {
+                    println("[WasmApp] Rendering AirplaneTransition - showAirplaneTransition is true")
+                    AirplaneTransition(
+                        modifier = Modifier.fillMaxSize(),
+                        isAnimating = showAirplaneTransition,
+                        onAnimationComplete = {
+                            showAirplaneTransition = false
+                            if (pendingSearchNavigation) {
+                                pendingSearchNavigation = false
+                                currentScreen = WasmScreen.SEARCH
+                            }
+                        },
+                        previousScreen = {
+                            // The landing screen (being wiped away)
+                            LandingScreen(
+                                onFlyNowClick = { },
+                                onLoginClick = { },
+                                onLogoutClick = { },
+                                onMyBookingsClick = { },
+                                onSettingsClick = { },
+                                onCheckInClick = { },
+                                userName = currentUser?.firstName,
+                                isRtl = localizationState.isRtl
+                            )
+                        },
+                        nextScreen = {
+                            // The search screen (being revealed)
+                            WasmSearchScreenContainer(
+                                viewModel = searchViewModel,
+                                localizationState = localizationState,
+                                onBack = { },
+                                onNavigateToResults = { },
+                                onNavigateToSettings = { },
+                                onNavigateToSavedBookings = { }
+                            )
+                        }
+                    )
                 }
             }
         }

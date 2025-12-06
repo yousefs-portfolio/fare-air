@@ -35,7 +35,8 @@ data class PassengerCountsDto(
 @Serializable
 data class FlightSearchResponseDto(
     val flights: List<FlightDto>,
-    val searchId: String = ""
+    val searchId: String = "",
+    val tripType: String = "ONE_WAY"
 )
 
 /**

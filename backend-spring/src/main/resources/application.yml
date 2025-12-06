@@ -101,8 +101,8 @@ fairair:
   security:
     cors:
       allowed-origins:
-        - https://fairair.example.com
-        - https://www.fairair.example.com
+        - https://fairair.yousef.codes
+        - https://fairair-web-1003920697803.us-central1.run.app
 
 logging:
   level:

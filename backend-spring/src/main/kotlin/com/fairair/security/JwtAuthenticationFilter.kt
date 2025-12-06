@@ -60,6 +60,7 @@ class JwtAuthenticationFilter(
             "/actuator/",
             "/api/v1/config/destinations/",
             "/api/v1/config/",
+            "/api/v1/location/",
             "/api/v1/booking/",
             "/api/v1/checkin/",
             "/api/v1/manage/",

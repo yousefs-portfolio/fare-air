@@ -117,16 +117,33 @@ private external fun jsLocationError(result: JsLocationResult): String
 external interface JsIpLocationResult : JsAny
 
 /**
- * Fetch location from IP using ipapi.co (free tier, HTTPS, no API key needed).
+ * Gets the API base URL based on the current hostname.
+ * This duplicates the logic from main.kt to avoid circular dependencies.
  */
 @JsFun("""
-() => fetch('https://ipapi.co/json/')
-    .then(r => r.json())
-    .catch(() => ({ error: true }))
+() => {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://localhost:8080';
+    } else {
+        return 'https://api.fairair.yousef.codes';
+    }
+}
 """)
-private external fun jsGetIpLocation(): Promise<JsIpLocationResult>
+private external fun jsGetApiBaseUrl(): String
 
-@JsFun("(result) => !result.error && result.latitude !== undefined")
+/**
+ * Fetch location from IP using our backend proxy endpoint.
+ * The backend calls ipapi.co server-to-server to avoid CORS issues.
+ */
+@JsFun("""
+(apiBaseUrl) => fetch(apiBaseUrl + '/api/v1/location/ip')
+    .then(r => r.json())
+    .catch(() => ({ success: false, error: 'Network error' }))
+""")
+private external fun jsGetIpLocation(apiBaseUrl: String): Promise<JsIpLocationResult>
+
+@JsFun("(result) => result.success === true && result.latitude !== undefined")
 private external fun jsIpLocationSuccess(result: JsIpLocationResult): Boolean
 
 @JsFun("(result) => result.latitude || 0")
@@ -195,8 +212,9 @@ object LocationService {
     
     private suspend fun tryIpGeolocation(): LocationResult {
         return try {
-            println("LocationService: Requesting IP-based location...")
-            val result = jsGetIpLocation().await<JsIpLocationResult>()
+            println("LocationService: Requesting IP-based location via backend proxy...")
+            val apiBaseUrl = jsGetApiBaseUrl()
+            val result = jsGetIpLocation(apiBaseUrl).await<JsIpLocationResult>()
             
             if (jsIpLocationSuccess(result)) {
                 val lat = jsIpLocationLatitude(result)

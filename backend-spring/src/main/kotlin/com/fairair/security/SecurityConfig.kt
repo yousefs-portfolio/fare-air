@@ -64,6 +64,7 @@ class SecurityConfig(
                     .pathMatchers("/actuator/**").permitAll()
                     .pathMatchers("/api/v1/auth/**").permitAll()
                     .pathMatchers("/api/v1/config/**").permitAll()
+                    .pathMatchers("/api/v1/location/**").permitAll()
                     .pathMatchers("/api/v1/search", "/api/v1/search/**").permitAll()
                     .pathMatchers("/api/v1/booking", "/api/v1/booking/**").permitAll()
                     .pathMatchers("/api/v1/checkin", "/api/v1/checkin/**").permitAll()

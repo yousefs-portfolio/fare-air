@@ -11,8 +11,9 @@ import kotlinx.datetime.LocalDate
 data class VelocitySearchState(
     /**
      * Type of trip: one-way, round-trip, or multi-city.
+     * Default to ONE_WAY since round-trip response handling is not yet implemented.
      */
-    val tripType: TripType = TripType.ROUND_TRIP,
+    val tripType: TripType = TripType.ONE_WAY,
 
     /**
      * Currently selected origin airport.
