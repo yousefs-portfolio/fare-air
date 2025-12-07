@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +39,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.fairair.app.ui.theme.NotoKufiArabicFontFamily
+import com.fairair.app.ui.theme.SpaceGroteskFontFamily
 import com.fairair.contract.dto.ChatUiType
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -56,6 +59,14 @@ private val PilotAccentColor = Color(0xFF22D3EE) // Cyan
 private val PilotGradient = Brush.radialGradient(
     colors = listOf(PilotAccentColor, PilotPrimaryColor, PilotSecondaryColor)
 )
+
+/**
+ * Gets the appropriate font family based on RTL mode.
+ */
+@Composable
+private fun chatFontFamily(isRtl: Boolean): FontFamily {
+    return if (isRtl) NotoKufiArabicFontFamily() else SpaceGroteskFontFamily()
+}
 
 // =============================================================================
 // PILOT ORB - The Floating Action Button
@@ -205,9 +216,8 @@ fun PilotChatSheet(
     onClearChat: () -> Unit,
     onDismiss: () -> Unit,
     onVoiceClick: () -> Unit = {},
-    onLocaleChange: (String) -> Unit = {},
     modifier: Modifier = Modifier,
-    locale: String = "en-US"
+    isRtl: Boolean = false
 ) {
     PilotOverlay(
         uiState = uiState,
@@ -218,9 +228,8 @@ fun PilotChatSheet(
         onSuggestionTapped = onSuggestionTapped,
         onClearChat = onClearChat,
         onDismiss = onDismiss,
-        onLocaleChange = onLocaleChange,
         modifier = modifier,
-        locale = locale
+        isRtl = isRtl
     )
 }
 
@@ -242,11 +251,9 @@ fun PilotOverlay(
     onSuggestionTapped: (String) -> Unit,
     onClearChat: () -> Unit,
     onDismiss: () -> Unit,
-    onLocaleChange: (String) -> Unit = {},
     modifier: Modifier = Modifier,
-    locale: String = "en-US"
+    isRtl: Boolean = false
 ) {
-    val isRtl = locale.startsWith("ar")
     val listState = rememberLazyListState()
 
     // Scroll to bottom when new messages arrive
@@ -266,12 +273,10 @@ fun PilotOverlay(
         shadowElevation = 16.dp
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Header with dismiss handle and language toggle
+            // Header with dismiss handle
             PilotHeader(
                 onDismiss = onDismiss,
                 onClearChat = onClearChat,
-                onLocaleChange = onLocaleChange,
-                currentLocale = locale,
                 isRtl = isRtl
             )
 
@@ -351,10 +356,9 @@ fun PilotOverlay(
 private fun PilotHeader(
     onDismiss: () -> Unit,
     onClearChat: () -> Unit,
-    onLocaleChange: (String) -> Unit,
-    currentLocale: String,
     isRtl: Boolean
 ) {
+    val fontFamily = chatFontFamily(isRtl)
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -404,36 +408,17 @@ private fun PilotHeader(
                 Text(
                     text = if (isRtl) "فارس" else "Faris",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = fontFamily
                 )
                 Text(
                     text = if (isRtl) "مساعدك للسفر" else "Your travel assistant",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = fontFamily
                 )
             }
             
-            // Language toggle button
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(PilotPrimaryColor.copy(alpha = 0.1f))
-                    .clickable {
-                        val newLocale = if (currentLocale.startsWith("ar")) "en-US" else "ar-SA"
-                        onLocaleChange(newLocale)
-                    }
-                    .padding(horizontal = 10.dp, vertical = 6.dp)
-            ) {
-                Text(
-                    text = if (currentLocale.startsWith("ar")) "EN" else "AR",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PilotPrimaryColor
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(4.dp))
-
             IconButton(onClick = onClearChat) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
@@ -457,6 +442,7 @@ private fun PilotHeader(
 
 @Composable
 private fun PilotWelcome(isRtl: Boolean) {
+    val fontFamily = chatFontFamily(isRtl)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -518,10 +504,11 @@ private fun PilotWelcome(isRtl: Boolean) {
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
-            text = if (isRtl) "هلا! أنا Pilot" else "Hey! I'm Pilot",
+            text = if (isRtl) "هلا! أنا فارس" else "Hey! I'm Faris",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            fontFamily = fontFamily
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -534,7 +521,8 @@ private fun PilotWelcome(isRtl: Boolean) {
             },
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            fontFamily = fontFamily
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -559,7 +547,8 @@ private fun PilotWelcome(isRtl: Boolean) {
                     modifier = Modifier.padding(12.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    fontFamily = fontFamily
                 )
             }
         }
@@ -581,15 +570,16 @@ private fun PolymorphicChatItem(
     CompositionLocalProvider(
         LocalLayoutDirection provides if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
     ) {
+        val fontFamily = chatFontFamily(isRtl)
         when {
             message.isLoading -> LoadingIndicator()
-            message.isFromUser -> UserBubble(message.text)
+            message.isFromUser -> UserBubble(message.text, fontFamily)
             message.uiType != null -> {
                 println("PolymorphicChatItem: Rendering card for uiType=${message.uiType}")
                 // Render specialized UI based on type
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (message.text.isNotBlank()) {
-                        AssistantBubble(message.text)
+                        AssistantBubble(message.text, fontFamily)
                     }
                     PolymorphicCard(
                         uiType = message.uiType,
@@ -598,13 +588,13 @@ private fun PolymorphicChatItem(
                     )
                 }
             }
-            else -> AssistantBubble(message.text)
+            else -> AssistantBubble(message.text, fontFamily)
         }
     }
 }
 
 @Composable
-private fun UserBubble(text: String) {
+private fun UserBubble(text: String, fontFamily: FontFamily) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End
@@ -618,14 +608,15 @@ private fun UserBubble(text: String) {
                 text = text,
                 modifier = Modifier.padding(12.dp),
                 color = Color.White,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = fontFamily
             )
         }
     }
 }
 
 @Composable
-private fun AssistantBubble(text: String) {
+private fun AssistantBubble(text: String, fontFamily: FontFamily) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start
@@ -638,7 +629,8 @@ private fun AssistantBubble(text: String) {
             Text(
                 text = text,
                 modifier = Modifier.padding(12.dp),
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = fontFamily
             )
         }
     }
@@ -1680,6 +1672,7 @@ private fun QuickSuggestions(
     onSuggestionTapped: (String) -> Unit,
     isRtl: Boolean
 ) {
+    val fontFamily = chatFontFamily(isRtl)
     CompositionLocalProvider(
         LocalLayoutDirection provides if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
     ) {
@@ -1697,7 +1690,8 @@ private fun QuickSuggestions(
                         Text(
                             text = suggestion,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            fontFamily = fontFamily
                         )
                     },
                     colors = SuggestionChipDefaults.suggestionChipColors(
@@ -1790,7 +1784,8 @@ private fun VoiceInputBar(
                     Text(
                         text = if (isRtl) "فارس يتحدث..." else "Faris speaking...",
                         style = MaterialTheme.typography.labelSmall,
-                        color = PilotPrimaryColor.copy(alpha = speakingAlpha)
+                        color = PilotPrimaryColor.copy(alpha = speakingAlpha),
+                        fontFamily = chatFontFamily(isRtl)
                     )
                 }
             }

@@ -172,8 +172,14 @@ class ChatScreenModel(
                     )
                     
                     // Speak the AI response if voice synthesis is available
+                    // Use detected language from AI response, falling back to site locale
                     if (voiceService.isSynthesisAvailable()) {
-                        voiceService.speak(response.text, _uiState.value.currentLocale)
+                        val ttsLanguage = when (response.detectedLanguage) {
+                            "ar" -> "ar-SA"
+                            "en" -> "en-US"
+                            else -> _uiState.value.currentLocale
+                        }
+                        voiceService.speak(response.text, ttsLanguage)
                     }
                 }
                 is ApiResult.Error -> {

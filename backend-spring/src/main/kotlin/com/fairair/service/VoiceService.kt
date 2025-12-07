@@ -24,16 +24,17 @@ class VoiceService {
     
     /**
      * Transcribes audio to text using Google Cloud Speech-to-Text.
+     * Supports automatic language detection between English and Arabic.
      * 
      * @param audioBase64 Base64-encoded audio data (WebM/Opus from browser MediaRecorder)
-     * @param languageCode Language code: "en-US" for English, "ar-SA" for Saudi Arabic
-     * @return Transcribed text
+     * @param languageCode Primary language code: "en-US" for English, "ar-SA" for Saudi Arabic
+     * @return Transcribed text with detected language
      */
     suspend fun transcribe(audioBase64: String, languageCode: String): TranscriptionResult {
         return withContext(Dispatchers.IO) {
             try {
                 val audioBytes = Base64.getDecoder().decode(audioBase64)
-                log.info("Transcribing audio: ${audioBytes.size} bytes, language: $languageCode")
+                log.info("Transcribing audio: ${audioBytes.size} bytes, primary language: $languageCode")
                 
                 if (audioBytes.size < 1000) {
                     log.warn("Audio too short: ${audioBytes.size} bytes")
@@ -46,10 +47,19 @@ class VoiceService {
                 }
                 
                 SpeechClient.create().use { speechClient ->
+                    // Enable multi-language detection: user can speak English or Arabic
+                    // Primary language is based on UI, but we detect both
+                    val alternativeLanguages = if (languageCode.startsWith("ar")) {
+                        listOf("en-US") // If UI is Arabic, also listen for English
+                    } else {
+                        listOf("ar-SA") // If UI is English, also listen for Arabic
+                    }
+                    
                     val config = RecognitionConfig.newBuilder()
                         .setEncoding(RecognitionConfig.AudioEncoding.WEBM_OPUS)
                         .setSampleRateHertz(48000)
                         .setLanguageCode(languageCode)
+                        .addAllAlternativeLanguageCodes(alternativeLanguages)
                         .setModel("latest_long") // Best model for conversational speech
                         .setEnableAutomaticPunctuation(true)
                         .build()
@@ -60,23 +70,24 @@ class VoiceService {
                     
                     val response = speechClient.recognize(config, audio)
                     
-                    val transcript = response.resultsList
-                        .flatMap { it.alternativesList }
-                        .maxByOrNull { it.confidence }
-                        ?.transcript
-                        ?: ""
+                    // Get the best result (highest confidence)
+                    val bestResult = response.resultsList
+                        .flatMap { result -> 
+                            result.alternativesList.map { alt -> 
+                                Triple(alt.transcript, alt.confidence, result.languageCode) 
+                            }
+                        }
+                        .maxByOrNull { it.second }
                     
-                    val confidence = response.resultsList
-                        .flatMap { it.alternativesList }
-                        .maxByOrNull { it.confidence }
-                        ?.confidence
-                        ?: 0f
+                    val transcript = bestResult?.first ?: ""
+                    val confidence = bestResult?.second ?: 0f
+                    val detectedLanguage = bestResult?.third?.ifBlank { languageCode } ?: languageCode
                     
-                    log.info("Transcribed ($languageCode): '$transcript' (confidence: $confidence)")
+                    log.info("Transcribed (detected: $detectedLanguage): '$transcript' (confidence: $confidence)")
                     TranscriptionResult(
                         text = transcript,
                         confidence = confidence,
-                        languageCode = languageCode
+                        languageCode = detectedLanguage
                     )
                 }
             } catch (e: Exception) {

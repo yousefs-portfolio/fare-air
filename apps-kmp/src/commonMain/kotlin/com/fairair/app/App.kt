@@ -94,17 +94,14 @@ private fun AppContent() {
                         PilotChatSheet(
                             uiState = chatUiState,
                             onSendMessage = { message ->
-                                chatScreenModel.sendMessage(message, chatUiState.currentLocale)
+                                chatScreenModel.sendMessage(message, currentLocale)
                             },
                             onInputChange = { chatScreenModel.updateInputText(it) },
                             onSuggestionTapped = { chatScreenModel.onSuggestionTapped(it) },
                             onClearChat = { chatScreenModel.clearChat() },
                             onDismiss = { showChatSheet = false },
                             onVoiceClick = { chatScreenModel.toggleListening() },
-                            onLocaleChange = { newLocale -> 
-                                chatScreenModel.setLocale(newLocale)
-                            },
-                            locale = chatUiState.currentLocale
+                            isRtl = localization.isRtl
                         )
                     }
                 }
