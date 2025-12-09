@@ -1,5 +1,9 @@
 package com.fairair.app
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -573,7 +577,7 @@ private fun WasmAppContent() {
                     )
                 }
 
-                // Pilot AI Orb - visible when AI is not open
+                // Pilot AI Orb - always visible when AI is closed
                 if (!showPilotAI) {
                     PilotOrb(
                         onClick = { showPilotAI = true },
@@ -583,10 +587,12 @@ private fun WasmAppContent() {
                             .padding(16.dp)
                     )
                 }
+            }
 
-                // Pilot Full Screen AI - with fade animation
+            // Pilot Full Screen AI - rendered outside main Box to avoid blocking
+            if (showPilotAI) {
                 PilotFullScreen(
-                    visible = showPilotAI,
+                    visible = true,
                     uiState = chatUiState,
                     onSendMessage = { message ->
                         val locale = if (localizationState.isRtl) "ar-SA" else "en-US"

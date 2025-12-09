@@ -27,10 +27,13 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -38,8 +41,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.fairair.app.ui.theme.NotoKufiArabicFontFamily
+import com.fairair.app.ui.theme.SpaceGroteskFontFamily
+import com.fairair.app.ui.theme.VelocityColors
 import com.fairair.contract.dto.ChatUiType
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.contentOrNull
 
 // Pilot brand colors - using airline theme
 private val PilotPrimaryColor = Color(0xFF0EA5E9) // Sky blue
@@ -48,6 +61,14 @@ private val PilotAccentColor = Color(0xFF22D3EE) // Cyan
 private val PilotGradient = Brush.radialGradient(
     colors = listOf(PilotAccentColor, PilotPrimaryColor, PilotSecondaryColor)
 )
+
+/**
+ * Gets the appropriate font family based on RTL mode.
+ */
+@Composable
+private fun chatFontFamily(isRtl: Boolean): FontFamily {
+    return if (isRtl) NotoKufiArabicFontFamily() else SpaceGroteskFontFamily()
+}
 
 // =============================================================================
 // PILOT ORB - The Floating Action Button
@@ -219,7 +240,7 @@ fun PilotFullScreen(
     // This function renders the full-screen content directly.
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = VelocityColors.BackgroundDeep
     ) {
         Box(
             modifier = Modifier
@@ -227,14 +248,20 @@ fun PilotFullScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.colorScheme.background,
-                            PilotPrimaryColor.copy(alpha = 0.05f)
+                            VelocityColors.GradientStart,
+                            VelocityColors.GradientEnd,
+                            VelocityColors.BackgroundDeep
                         )
                     )
-                )
+                ),
+            contentAlignment = Alignment.TopCenter
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            // Centered container with max width for better readability
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxHeight()
+            ) {
                 // Header with close button
                 PilotFullScreenHeader(
                     onDismiss = onDismiss,
@@ -242,55 +269,54 @@ fun PilotFullScreen(
                     isRtl = isRtl
                 )
 
-                    // Content area - either polymorphic cards or welcome
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                    ) {
-                        if (uiState.messages.isEmpty()) {
-                            PilotWelcome(isRtl = isRtl)
-                        } else {
-                            LazyColumn(
-                                state = listState,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                                contentPadding = PaddingValues(vertical = 16.dp)
-                            ) {
-                                items(uiState.messages, key = { it.id }) { message ->
-                                    PolymorphicChatItem(
-                                        message = message,
-                                        isRtl = isRtl,
-                                        hideTextWhenUiPresent = true
-                                    )
-                                }
+                // Content area - either polymorphic cards or welcome
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+                    if (uiState.messages.isEmpty()) {
+                        PilotWelcome(isRtl = isRtl)
+                    } else {
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(vertical = 16.dp)
+                        ) {
+                            items(uiState.messages, key = { it.id }) { message ->
+                                PolymorphicChatItem(
+                                    message = message,
+                                    isRtl = isRtl,
+                                    hideTextWhenUiPresent = true
+                                )
                             }
                         }
                     }
+                }
 
-                    // Quick suggestions
-                    val lastAssistantMessage = uiState.messages.lastOrNull { !it.isFromUser }
-                    if (lastAssistantMessage?.suggestions?.isNotEmpty() == true) {
-                        QuickSuggestions(
-                            suggestions = lastAssistantMessage.suggestions,
-                            onSuggestionTapped = onSuggestionTapped,
-                            isRtl = isRtl
-                        )
-                    }
-
-                    // Voice-first input bar
-                    VoiceInputBar(
-                        inputText = uiState.inputText,
-                        onInputChange = onInputChange,
-                        onSendMessage = { onSendMessage(uiState.inputText) },
-                        onMicClick = onVoiceClick,
-                        isListening = uiState.isListening,
-                        isLoading = uiState.isLoading,
+                // Quick suggestions
+                val lastAssistantMessage = uiState.messages.lastOrNull { !it.isFromUser }
+                if (lastAssistantMessage?.suggestions?.isNotEmpty() == true) {
+                    QuickSuggestions(
+                        suggestions = lastAssistantMessage.suggestions,
+                        onSuggestionTapped = onSuggestionTapped,
                         isRtl = isRtl
                     )
                 }
+
+                // Voice-first input bar
+                VoiceInputBar(
+                    inputText = uiState.inputText,
+                    onInputChange = onInputChange,
+                    onSendMessage = { onSendMessage(uiState.inputText) },
+                    onMicClick = onVoiceClick,
+                    isListening = uiState.isListening,
+                    isLoading = uiState.isLoading,
+                    isRtl = isRtl
+                )
             }
         }
     }
@@ -316,7 +342,7 @@ private fun PilotFullScreenHeader(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
-                tint = MaterialTheme.colorScheme.onSurface
+                tint = VelocityColors.TextMain
             )
         }
 
@@ -352,12 +378,13 @@ private fun PilotFullScreenHeader(
                 Text(
                     text = "Pilot",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = VelocityColors.TextMain
                 )
                 Text(
                     text = if (isRtl) "مساعدك الذكي" else "Your AI Assistant",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = VelocityColors.TextMuted
                 )
             }
         }
@@ -367,13 +394,13 @@ private fun PilotFullScreenHeader(
             Icon(
                 imageVector = Icons.Default.Refresh,
                 contentDescription = "Clear chat",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = VelocityColors.TextMuted
             )
         }
     }
 
     HorizontalDivider(
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        color = VelocityColors.GlassBorder
     )
 }
 
@@ -439,7 +466,7 @@ fun PilotOverlay(
         modifier = modifier
             .fillMaxWidth()
             .fillMaxHeight(0.55f), // Half-height as per spec
-        color = MaterialTheme.colorScheme.surface,
+        color = VelocityColors.BackgroundMid,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         tonalElevation = 8.dp,
         shadowElevation = 16.dp
@@ -520,7 +547,7 @@ private fun PilotHeader(
                 .width(40.dp)
                 .height(4.dp)
                 .background(
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    VelocityColors.TextMuted.copy(alpha = 0.4f),
                     RoundedCornerShape(2.dp)
                 )
         )
@@ -558,12 +585,13 @@ private fun PilotHeader(
                 Text(
                     text = "Pilot",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = VelocityColors.TextMain
                 )
                 Text(
                     text = if (isRtl) "مساعدك للسفر" else "Your travel assistant",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = VelocityColors.TextMuted
                 )
             }
 
@@ -571,7 +599,7 @@ private fun PilotHeader(
                 Icon(
                     imageVector = Icons.Default.Refresh,
                     contentDescription = "Clear chat",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = VelocityColors.TextMuted
                 )
             }
 
@@ -579,12 +607,12 @@ private fun PilotHeader(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = VelocityColors.TextMuted
                 )
             }
         }
         
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        HorizontalDivider(color = VelocityColors.GlassBorder)
     }
 }
 
@@ -654,7 +682,8 @@ private fun PilotWelcome(isRtl: Boolean) {
             text = if (isRtl) "هلا! أنا Pilot" else "Hey! I'm Pilot",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            color = VelocityColors.TextMain
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -666,7 +695,7 @@ private fun PilotWelcome(isRtl: Boolean) {
                 "Tap the mic and talk to me"
             },
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = VelocityColors.TextMuted,
             textAlign = TextAlign.Center
         )
 
@@ -685,13 +714,13 @@ private fun PilotWelcome(isRtl: Boolean) {
                     .fillMaxWidth()
                     .padding(vertical = 4.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                color = VelocityColors.GlassBg
             ) {
                 Text(
                     text = "\"$prompt\"",
                     modifier = Modifier.padding(12.dp),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = VelocityColors.TextMuted,
                     textAlign = TextAlign.Center
                 )
             }
@@ -764,12 +793,13 @@ private fun AssistantBubble(text: String) {
         Surface(
             modifier = Modifier.widthIn(max = 300.dp),
             shape = RoundedCornerShape(16.dp, 16.dp, 16.dp, 4.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant
+            color = VelocityColors.GlassBg
         ) {
             Text(
                 text = text,
                 modifier = Modifier.padding(12.dp),
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = VelocityColors.TextMain
             )
         }
     }
@@ -785,7 +815,7 @@ private fun LoadingIndicator() {
     ) {
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant
+            color = VelocityColors.GlassBg
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -836,12 +866,13 @@ private fun PolymorphicCard(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant
+                color = VelocityColors.GlassBg
             ) {
                 Text(
                     text = "UI: ${uiType.name}",
                     modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = VelocityColors.TextMuted
                 )
             }
         }
@@ -862,6 +893,7 @@ private fun FlightCarouselCard(uiData: String?, isRtl: Boolean) {
             text = if (isRtl) "الرحلات المتاحة" else "Available Flights",
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
+            color = VelocityColors.TextMain,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         
@@ -893,10 +925,10 @@ private fun FlightOptionCard(
             .width(140.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = VelocityColors.BackgroundMid,
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outlineVariant
+            VelocityColors.GlassBorder
         ),
         shadowElevation = 2.dp
     ) {
@@ -908,24 +940,25 @@ private fun FlightOptionCard(
                 text = flightNumber,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = PilotPrimaryColor
+                color = VelocityColors.Accent
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = departureTime,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = VelocityColors.TextMain
             )
             Spacer(modifier = Modifier.height(8.dp))
             Surface(
                 shape = RoundedCornerShape(8.dp),
-                color = PilotPrimaryColor.copy(alpha = 0.1f)
+                color = VelocityColors.Primary.copy(alpha = 0.15f)
             ) {
                 Text(
                     text = price,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelLarge,
-                    color = PilotPrimaryColor,
+                    color = VelocityColors.Primary,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -938,17 +971,18 @@ private fun SeatMapCard(uiData: String?, isRtl: Boolean) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = VelocityColors.BackgroundMid,
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outlineVariant
+            VelocityColors.GlassBorder
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = if (isRtl) "اختر مقعدك" else "Select Your Seat",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = VelocityColors.TextMain
             )
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -1044,7 +1078,8 @@ private fun LegendItem(color: Color, label: String) {
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.labelSmall,
+            color = VelocityColors.TextMuted
         )
     }
 }
@@ -1054,7 +1089,7 @@ private fun BoardingPassCard(uiData: String?, isRtl: Boolean) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = VelocityColors.BackgroundMid,
         shadowElevation = 4.dp
     ) {
         Column {
@@ -1064,7 +1099,7 @@ private fun BoardingPassCard(uiData: String?, isRtl: Boolean) {
                     .fillMaxWidth()
                     .background(
                         brush = Brush.horizontalGradient(
-                            colors = listOf(PilotPrimaryColor, PilotSecondaryColor)
+                            colors = listOf(VelocityColors.Primary, VelocityColors.Accent)
                         )
                     )
                     .padding(16.dp)
@@ -1087,19 +1122,20 @@ private fun BoardingPassCard(uiData: String?, isRtl: Boolean) {
                         Text(
                             text = "RUH",
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = VelocityColors.TextMain
                         )
                         Text(
                             text = if (isRtl) "الرياض" else "Riyadh",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = VelocityColors.TextMuted
                         )
                     }
                     
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = null,
-                        tint = PilotPrimaryColor,
+                        tint = VelocityColors.Accent,
                         modifier = Modifier.size(32.dp)
                     )
                     
@@ -1107,12 +1143,13 @@ private fun BoardingPassCard(uiData: String?, isRtl: Boolean) {
                         Text(
                             text = "JED",
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = VelocityColors.TextMain
                         )
                         Text(
                             text = if (isRtl) "جدة" else "Jeddah",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = VelocityColors.TextMuted
                         )
                     }
                 }
@@ -1151,7 +1188,7 @@ private fun BoardingPassCard(uiData: String?, isRtl: Boolean) {
                         .fillMaxWidth()
                         .height(80.dp)
                         .background(
-                            MaterialTheme.colorScheme.surfaceVariant,
+                            VelocityColors.GlassBg,
                             RoundedCornerShape(8.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -1159,7 +1196,7 @@ private fun BoardingPassCard(uiData: String?, isRtl: Boolean) {
                     Text(
                         text = "QR CODE",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = VelocityColors.TextMuted
                     )
                 }
             }
@@ -1173,12 +1210,13 @@ private fun InfoColumn(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = VelocityColors.TextMuted
         )
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = VelocityColors.TextMain
         )
     }
 }
@@ -1188,17 +1226,18 @@ private fun ComparisonCard(uiData: String?, isRtl: Boolean) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = VelocityColors.BackgroundMid,
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outlineVariant
+            VelocityColors.GlassBorder
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = if (isRtl) "مقارنة الرحلات" else "Flight Comparison",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = VelocityColors.TextMain
             )
             
             Spacer(modifier = Modifier.height(12.dp))
@@ -1242,7 +1281,7 @@ private fun ComparisonCard(uiData: String?, isRtl: Boolean) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                color = PilotPrimaryColor.copy(alpha = 0.1f)
+                color = VelocityColors.Primary.copy(alpha = 0.15f)
             ) {
                 Row(
                     modifier = Modifier
@@ -1253,13 +1292,14 @@ private fun ComparisonCard(uiData: String?, isRtl: Boolean) {
                 ) {
                     Text(
                         text = if (isRtl) "الفرق" else "Difference",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = VelocityColors.TextMain
                     )
                     Text(
                         text = "+SAR 70",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = PilotPrimaryColor
+                        color = VelocityColors.Primary
                     )
                 }
             }
@@ -1279,9 +1319,9 @@ private fun ComparisonColumn(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
         color = if (isOld) 
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            VelocityColors.GlassBg
         else 
-            PilotPrimaryColor.copy(alpha = 0.1f)
+            VelocityColors.Primary.copy(alpha = 0.15f)
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -1290,19 +1330,20 @@ private fun ComparisonColumn(
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = VelocityColors.TextMuted
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = flightNumber,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = VelocityColors.TextMain
             )
             Text(
                 text = time,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = if (isOld) MaterialTheme.colorScheme.onSurfaceVariant else PilotPrimaryColor
+                color = if (isOld) VelocityColors.TextMuted else VelocityColors.Primary
             )
         }
     }
@@ -1313,10 +1354,10 @@ private fun BookingSummaryCard(uiData: String?, isRtl: Boolean) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = VelocityColors.BackgroundMid,
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outlineVariant
+            VelocityColors.GlassBorder
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -1328,17 +1369,18 @@ private fun BookingSummaryCard(uiData: String?, isRtl: Boolean) {
                 Text(
                     text = if (isRtl) "ملخص الحجز" else "Booking Summary",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = VelocityColors.TextMain
                 )
                 Surface(
                     shape = RoundedCornerShape(4.dp),
-                    color = PilotAccentColor.copy(alpha = 0.2f)
+                    color = VelocityColors.Accent.copy(alpha = 0.2f)
                 ) {
                     Text(
                         text = "ABC123",
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelMedium,
-                        color = PilotPrimaryColor,
+                        color = VelocityColors.Accent,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -1374,13 +1416,14 @@ private fun BookingSummaryCard(uiData: String?, isRtl: Boolean) {
                 Text(
                     text = if (isRtl) "المجموع" else "Total",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = VelocityColors.TextMain
                 )
                 Text(
                     text = "SAR 760",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = PilotPrimaryColor
+                    color = VelocityColors.Accent
                 )
             }
         }
@@ -1398,12 +1441,13 @@ private fun SummaryRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = VelocityColors.TextMuted
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            color = VelocityColors.TextMain
         )
     }
 }
@@ -1439,8 +1483,8 @@ private fun QuickSuggestions(
                         )
                     },
                     colors = SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = PilotPrimaryColor.copy(alpha = 0.1f),
-                        labelColor = PilotPrimaryColor
+                        containerColor = VelocityColors.Primary.copy(alpha = 0.15f),
+                        labelColor = VelocityColors.Primary
                     ),
                     border = null
                 )
@@ -1459,6 +1503,7 @@ private fun VoiceInputBar(
     isLoading: Boolean,
     isRtl: Boolean
 ) {
+    val focusRequester = remember { FocusRequester() }
     val infiniteTransition = rememberInfiniteTransition(label = "mic_pulse")
     val micScale by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -1470,12 +1515,23 @@ private fun VoiceInputBar(
         label = "mic_scale"
     )
 
+    // Auto-focus text field when it's the user's turn to type
+    LaunchedEffect(isLoading, isListening) {
+        if (!isLoading && !isListening) {
+            try {
+                focusRequester.requestFocus()
+            } catch (e: Exception) {
+                // Focus request may fail if component not ready
+            }
+        }
+    }
+
     CompositionLocalProvider(
         LocalLayoutDirection provides if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
     ) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
+            color = VelocityColors.BackgroundMid,
             tonalElevation = 2.dp
         ) {
             Row(
@@ -1489,16 +1545,21 @@ private fun VoiceInputBar(
                 OutlinedTextField(
                     value = inputText,
                     onValueChange = onInputChange,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .focusRequester(focusRequester),
                     placeholder = {
                         Text(
                             text = if (isRtl) "اكتب أو تكلم..." else "Type or speak...",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            color = VelocityColors.TextMuted.copy(alpha = 0.6f)
                         )
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PilotPrimaryColor,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        focusedBorderColor = VelocityColors.Primary,
+                        unfocusedBorderColor = VelocityColors.GlassBorder,
+                        focusedTextColor = VelocityColors.TextMain,
+                        unfocusedTextColor = VelocityColors.TextMain,
+                        cursorColor = VelocityColors.Primary
                     ),
                     shape = RoundedCornerShape(24.dp),
                     singleLine = true,
@@ -1514,7 +1575,7 @@ private fun VoiceInputBar(
                         .scale(micScale)
                         .clickable(enabled = !isLoading) { onMicClick() },
                     shape = CircleShape,
-                    color = if (isListening) PilotAccentColor else PilotPrimaryColor,
+                    color = if (isListening) VelocityColors.Accent else VelocityColors.Primary,
                     shadowElevation = if (isListening) 8.dp else 4.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -1538,7 +1599,7 @@ private fun VoiceInputBar(
                         enabled = !isLoading,
                         modifier = Modifier
                             .size(44.dp)
-                            .background(PilotPrimaryColor, CircleShape)
+                            .background(VelocityColors.Primary, CircleShape)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
