@@ -1860,8 +1860,14 @@ private fun AuroraInputBar(
                     decorationBox = { innerTextField ->
                         Box {
                             if (inputText.isEmpty()) {
+                                // Show status-based placeholder text
+                                val placeholderText = when {
+                                    isListening -> if (isRtl) "جاري الاستماع..." else "Listening..."
+                                    isProcessing -> if (isRtl) "جاري المعالجة..." else "Processing..."
+                                    else -> if (isRtl) "اضغط على الميكروفون أو اكتب رسالة" else "Tap the mic or type a message"
+                                }
                                 Text(
-                                    text = if (isRtl) "اكتب أو تكلم..." else "Ask Pilot...",
+                                    text = placeholderText,
                                     style = TextStyle(
                                         color = Color.White.copy(alpha = 0.4f),
                                         fontSize = 16.sp
@@ -2247,9 +2253,9 @@ private fun PilotWelcome(isRtl: Boolean) {
 
         Text(
             text = if (isRtl) {
-                "اضغط على الميكروفون وتكلم معي"
+                "اضغط على الميكروفون أو اكتب رسالة"
             } else {
-                "Tap the mic and talk to me"
+                "Tap the mic or type a message"
             },
             style = MaterialTheme.typography.bodyLarge,
             color = VelocityColors.TextMuted,

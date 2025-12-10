@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -579,13 +580,15 @@ private fun WasmAppContent() {
                 }
 
                 // Pilot AI Orb - always visible when AI is closed
+                // Use zIndex to ensure FAB is always on top of screen content
                 if (!showPilotAI) {
                     PilotOrb(
                         onClick = { showPilotAI = true },
                         isListening = chatUiState.isListening,
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .padding(16.dp)
+                            .padding(24.dp)
+                            .zIndex(100f)
                     )
                 }
             }
